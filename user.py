@@ -2,6 +2,57 @@ import streamlit as st
 
 st.title("PantryChef") #Title display
 
+RECIPES = {
+    "Chicken Ceasar Salad": {
+        "ingredients": {"chicken", "lettuce", "tomatoes", "croutons", "garlic"},
+        "nutrition": {
+            "calories": 350,
+            "protein": 30,
+            "carbs": 10,
+            "fat": 20
+        },
+        "meal": "Lunch",
+        "diet": {"Vegan"},
+        "servings": 1
+    },
+    "Baked Macaroni and Cheese": {
+        "ingredients": {"macaroni", "cheese", "milk", "butter", "bread crumbs"},
+        "nutrition": {
+            "calories": 400,
+            "protein": 15,
+            "carbs": 50,
+            "fat": 20
+        },
+        "meal": "Dinner",
+        "diet": {"None"},
+        "servings": 4
+    },
+    "Fried Rice": {
+        "ingredients": {"rice", "vegetables", "soy sauce", "eggs", "green onions"},
+        "nutrition": {
+            "calories": 300,
+            "protein": 10,
+            "carbs": 45,
+            "fat": 10
+        },
+        "meal": "Lunch",
+        "diet": {"Dairy-free", "Vegan"},
+        "servings": 2
+    },
+    "Pancakes": {
+        "ingredients": {"flour", "milk", "eggs", "butter", "syrup"},
+        "nutrition": {
+            "calories": 350,
+            "protein": 8,
+            "carbs": 60,
+            "fat": 10
+        },
+        "meal": "Breakfast",
+        "diet": {"Vegetarian"},
+        "servings": 2
+    }
+}
+
 class PantryChefApp:
 
     def __init__(self):
@@ -24,10 +75,14 @@ class PantryChefApp:
     def submit_button(self, ingredients, diet, meal, servings):
         if self.st.button("Submit"): 
             if self.validate(ingredients, servings, diet, meal):
-                self.st.session_state.ingredients = ingredients
+                self.st.session_state.ingredients = ingredients #This is so we can use it later
                 self.st.session_state.diet = diet
                 self.st.session_state.meal = meal
                 self.st.session_state.servings = servings
+
+            # Perform calculations or data processing here
+            pantry_items = [item.strip().lower() for item in self.st.session_state.ingredients.split(",") if item.strip()] #This is so it is readable for the dictionary
+
 
     #Helps validate user input
     def validate(self, ingredients, servings, diet, meal):
@@ -50,3 +105,6 @@ app = PantryChefApp() #This creates an instance of the PantryChefApp class
 ingredients, diet, meal, servings = app.get_input() #This is so that it can display in streamlit
 
 app.submit_button(ingredients, diet, meal, servings)
+
+
+
