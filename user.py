@@ -81,7 +81,17 @@ class PantryChefApp:
                 self.st.session_state.servings = servings
 
             # Perform calculations or data processing here
-            pantry_items = [item.strip().lower() for item in self.st.session_state.ingredients.split(",") if item.strip()] #This is so it is readable for the dictionary
+            pantry_items = set(
+                item.strip().lower()
+                for item in ingredients.split(",")
+                if item.strip()
+            )
+            best_match = self.calculate_match(pantry_items)
+
+            self.st.subheader("Best Matching Recipe:")
+            self.st.write(f"Best Match: {best_match['name']} ({best_match['match']:.0f}% match)")
+
+
 
 
     #Helps validate user input
@@ -99,6 +109,27 @@ class PantryChefApp:
             self.st.error("Please select a valid meal type.")
             return False
         return True
+    
+    def calculate_match(self, pantry_items):
+        best_match = {"name": None, "match": 0}
+
+        # Loops through recipes
+        for recipe_name, recipe_info in RECIPES.items():
+
+            # Get the ingredients for the recipe
+            recipe_ingredients = recipe_info["ingredients"]
+
+            # Count matching ingredients using set intersection
+            ingredients_match = len(pantry_items.intersection(recipe_ingredients))
+
+            #Calculate match percentage
+            match_percentage = round(ingredients_match / len(recipe_ingredients) * 100, 0)
+
+            if match_percentage > best_match["match"]: # Check if this recipe is a better match
+                best_match["name"] = recipe_name
+                best_match["match"] = match_percentage
+
+        return best_match 
 
 app = PantryChefApp() #This creates an instance of the PantryChefApp class
 
