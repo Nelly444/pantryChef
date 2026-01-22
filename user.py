@@ -116,6 +116,13 @@ class PantryChefApp:
         # Loops through recipes
         for recipe_name, recipe_info in RECIPES.items():
 
+            if recipe_info["meal"] != self.st.session_state.meal:
+                continue
+
+            if "None" not in self.st.session_state.diet:
+                if recipe_info["diet"].isdisjoint(self.st.session_state.diet):
+                    continue
+
             # Get the ingredients for the recipe
             recipe_ingredients = recipe_info["ingredients"]
 
