@@ -2,6 +2,17 @@ import streamlit as st
 
 st.title("PantryChef") #Title display
 
+if "ingredients" not in st.session_state:
+    st.session_state.ingredients = ""
+if "diet" not in st.session_state:
+    st.session_state.diet = []
+if "meal" not in st.session_state:
+    st.session_state.meal = ""
+if "servings" not in st.session_state:
+    st.session_state.servings = 1
+if "reset" not in st.session_state:
+    st.session_state.reset = False
+
 RECIPES = {
     "Chicken Ceasar Salad": {
         "ingredients": {"chicken", "lettuce", "tomatoes", "croutons", "garlic"},
@@ -61,13 +72,22 @@ class PantryChefApp:
     #Input code
     def get_input(self):
 
-        ingredientsList = self.st.text_input("Enter ingredients (comma-separated): ")
+        if self.st.session_state.reset:
+            self.st.session_state.ingredients = ""
+            self.st.session_state.diet = []
+            self.st.session_state.meal = ""
+            self.st.session_state.servings = 1
+            self.st.session_state.reset = False
 
-        dietPreferences = self.st.multiselect("Select diet preferences:", ["None", "Vegetarian", "Vegan", "Gluten-Free", "Keto", "Dairy-free", "Low-carb"])
+        ingredientsList = self.st.text_input("Enter ingredients (comma-separated): ", key="ingredients")
 
-        mealType = self.st.selectbox("Select meal type:", ["Breakfast", "Lunch", "Dinner", "Snack"])
+        dietPreferences = self.st.multiselect("Select diet preferences:", ["None", "Vegetarian", "Vegan", "Gluten-Free", "Keto", "Dairy-free", "Low-carb"], key="diet")
 
-        numberOfServings = self.st.number_input("Enter the number of servings: ", min_value = 1, max_value = 20)
+        mealType = self.st.selectbox("Select meal type:", ["Breakfast", "Lunch", "Dinner", "Snack"], key="meal")
+
+        numberOfServings = self.st.number_input("Enter the number of servings: ", min_value = 1, max_value = 20, key="servings")
+
+        
 
         return ingredientsList , dietPreferences, mealType, numberOfServings
     
@@ -88,11 +108,15 @@ class PantryChefApp:
             )
             best_match = self.calculate_match(pantry_items)
 
+            #Matching feature
             self.st.subheader("Best Matching Recipe:")
             self.st.write(f"Best Match: {best_match['name']} ({best_match['match']:.0f}% match)")
-
-
-
+    
+    #Clear all the inputs
+    def clear_button(self):
+        if self.st.button("Clear"):
+            self.st.session_state.reset = True
+            self.st.rerun()
 
     #Helps validate user input
     def validate(self, ingredients, servings, diet, meal):
@@ -136,13 +160,16 @@ class PantryChefApp:
                 best_match["name"] = recipe_name
                 best_match["match"] = match_percentage
 
-        return best_match 
+        return best_match
+    
+
+
 
 app = PantryChefApp() #This creates an instance of the PantryChefApp class
 
 ingredients, diet, meal, servings = app.get_input() #This is so that it can display in streamlit
 
 app.submit_button(ingredients, diet, meal, servings)
-
+app.clear_button()
 
 
