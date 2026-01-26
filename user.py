@@ -47,7 +47,7 @@ RECIPES = {
             "fat": 10
         },
         "meal": "Lunch",
-        "diet": {"Dairy-free", "Vegan"},
+        "diet": {"Dairy-free", "Vegan", "Vegetarian"},
         "servings": 2
     },
     "Pancakes": {
@@ -59,7 +59,7 @@ RECIPES = {
             "fat": 10
         },
         "meal": "Breakfast",
-        "diet": {"Vegetarian"},
+        "diet": {"Vegetarian", "Vegan"},
         "servings": 2
     }
 }
