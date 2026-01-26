@@ -95,23 +95,41 @@ class PantryChefApp:
     def submit_button(self, ingredients, diet, meal, servings):
         if self.st.button("Submit"): 
             if self.validate(ingredients, servings, diet, meal):
-                self.st.session_state.ingredients = ingredients #This is so we can use it later
-                self.st.session_state.diet = diet
-                self.st.session_state.meal = meal
-                self.st.session_state.servings = servings
 
             # Perform calculations or data processing here
-            pantry_items = set(
-                item.strip().lower()
-                for item in ingredients.split(",")
-                if item.strip()
-            )
-            best_match = self.calculate_match(pantry_items)
+                pantry_items = set(
+                    item.strip().lower()
+                    for item in ingredients.split(",")
+                    if item.strip()
+                )
 
-            #Matching feature
-            self.st.subheader("Best Matching Recipe:")
-            self.st.write(f"Best Match: {best_match['name']} ({best_match['match']:.0f}% match)")
-    
+                # Find the best matching recipe
+                best_match = self.calculate_match(pantry_items)
+                if best_match["name"] is None:
+                    self.st.warning("No matching recipes found for your meal/diet preferences.")
+                    return
+
+                #Matching feature
+                self.st.subheader("Best Matching Recipe:")
+                self.st.write(f"Best Match: {best_match['name']} ({best_match['match']:.0f}% match)")
+
+                #Show nutrition info
+                nutrition_info = self.calculate_nutrition(best_match['name'], servings)
+
+                self.st.subheader("Nutrition Information:")
+                self.st.write(f"Calories: {nutrition_info[0]['calories']}") 
+                self.st.write(f"Protein: {nutrition_info[1]['protein']}")
+                self.st.write(f"Fat: {nutrition_info[2]['fat']}")
+                self.st.write(f"Carbohydrates: {nutrition_info[3]['carbs']}")
+
+                #Missing Ingredients feature
+                missing = self.missing_ingredients(best_match['name'], pantry_items)
+
+                self.st.subheader("Missing Ingredients:")
+                self.st.write(", ".join(missing) if missing else "You have all the ingredients!")
+
+
+
     #Clear all the inputs
     def clear_button(self):
         if self.st.button("Clear"):
@@ -162,8 +180,27 @@ class PantryChefApp:
 
         return best_match
     
+    #Nutrition calculator method
 
-
+    def calculate_nutrition(self, recipe_name, servings):
+        recipe = RECIPES.get(recipe_name)  # Get the recipe details
+        nutrition = recipe["nutrition"]  # Get the nutrition information
+        return [
+            {"calories": nutrition["calories"] * servings},
+            {"protein": nutrition["protein"] * servings},
+            {"fat": nutrition["fat"] * servings},
+            {"carbs": nutrition["carbs"] * servings},
+        ]  # Return the nutrition information
+    
+    #Missing ingredients
+    def missing_ingredients(self, recipe_name, pantry_items) -> list:
+        recipe = RECIPES.get(recipe_name)
+        if not recipe:
+            return []
+        
+        recipe_ingredients = set(ingredient.lower() for ingredient in recipe["ingredients"])
+        missing = list(recipe_ingredients.difference(pantry_items))
+        return missing
 
 app = PantryChefApp() #This creates an instance of the PantryChefApp class
 
