@@ -97,7 +97,7 @@ class PantryChefApp:
             if self.validate(ingredients, servings, diet, meal):
 
             # Perform calculations or data processing here
-                pantry_items = set(
+                pantry_items = set( 
                     item.strip().lower()
                     for item in ingredients.split(",")
                     if item.strip()
