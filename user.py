@@ -1,4 +1,6 @@
 import streamlit as st
+from recipe import calculate_match, calculate_nutrition, missing_ingredients
+from spoonacular import find_ingredients, get_recipe_info
 
 st.title("PantryChef") #Title display
 
@@ -13,56 +15,7 @@ if "servings" not in st.session_state:
 if "reset" not in st.session_state:
     st.session_state.reset = False
 
-RECIPES = {
-    "Chicken Ceasar Salad": {
-        "ingredients": {"chicken", "lettuce", "tomatoes", "croutons", "garlic"},
-        "nutrition": {
-            "calories": 350,
-            "protein": 30,
-            "carbs": 10,
-            "fat": 20
-        },
-        "meal": "Lunch",
-        "diet": {"Vegan"},
-        "servings": 1
-    },
-    "Baked Macaroni and Cheese": {
-        "ingredients": {"macaroni", "cheese", "milk", "butter", "bread crumbs"},
-        "nutrition": {
-            "calories": 400,
-            "protein": 15,
-            "carbs": 50,
-            "fat": 20
-        },
-        "meal": "Dinner",
-        "diet": {"None"},
-        "servings": 4
-    },
-    "Fried Rice": {
-        "ingredients": {"rice", "vegetables", "soy sauce", "eggs", "green onions"},
-        "nutrition": {
-            "calories": 300,
-            "protein": 10,
-            "carbs": 45,
-            "fat": 10
-        },
-        "meal": "Lunch",
-        "diet": {"Dairy-free", "Vegan", "Vegetarian"},
-        "servings": 2
-    },
-    "Pancakes": {
-        "ingredients": {"flour", "milk", "eggs", "butter", "syrup"},
-        "nutrition": {
-            "calories": 350,
-            "protein": 8,
-            "carbs": 60,
-            "fat": 10
-        },
-        "meal": "Breakfast",
-        "diet": {"Vegetarian", "Vegan"},
-        "servings": 2
-    }
-}
+
 
 class PantryChefApp:
 
@@ -104,32 +57,31 @@ class PantryChefApp:
                 )
 
                 # Find the best matching recipe
-                best_match = self.calculate_match(pantry_items)
-                if best_match["name"] is None:
+                best_match, best_pct = calculate_match(pantry_items)
+                if best_match is None:
                     self.st.warning("No matching recipes found for your meal/diet preferences.")
                     return
+                recipe_info = get_recipe_info(best_match['id'])  # Gets detailed recipe info from Spoonacular
 
                 #Matching feature
                 self.st.subheader("Best Matching Recipe:")
-                self.st.write(f"Best Match: {best_match['name']} ({best_match['match']:.0f}% match)")
+                self.st.write(f"Best Match: {best_match['title']} ({best_pct:.0f}% match)")
 
                 #Show nutrition info
-                nutrition_info = self.calculate_nutrition(best_match['name'], servings)
+                nutrition_info = calculate_nutrition(recipe_info, servings)
 
                 self.st.subheader("Nutrition Information:")
-                self.st.write(f"Calories: {nutrition_info[0]['calories']}") 
-                self.st.write(f"Protein: {nutrition_info[1]['protein']}")
-                self.st.write(f"Fat: {nutrition_info[2]['fat']}")
-                self.st.write(f"Carbohydrates: {nutrition_info[3]['carbs']}")
+                self.st.write(f"Calories: {nutrition_info['calories']}")
+                self.st.write(f"Protein: {nutrition_info['protein']}")
+                self.st.write(f"Fat: {nutrition_info['fat']}")
+                self.st.write(f"Carbohydrates: {nutrition_info['carbs']}")
 
                 #Missing Ingredients feature
-                missing = self.missing_ingredients(best_match['name'], pantry_items)
+                missing = missing_ingredients(recipe_info, pantry_items)
 
                 self.st.subheader("Missing Ingredients:")
                 self.st.write(", ".join(missing) if missing else "You have all the ingredients!")
-
-
-
+                
     #Clear all the inputs
     def clear_button(self):
         if self.st.button("Clear"):
@@ -151,56 +103,6 @@ class PantryChefApp:
             self.st.error("Please select a valid meal type.")
             return False
         return True
-    
-    def calculate_match(self, pantry_items):
-        best_match = {"name": None, "match": 0}
-
-        # Loops through recipes
-        for recipe_name, recipe_info in RECIPES.items():
-
-            if recipe_info["meal"] != self.st.session_state.meal:
-                continue
-
-            if "None" not in self.st.session_state.diet:
-                if recipe_info["diet"].isdisjoint(self.st.session_state.diet):
-                    continue
-
-            # Get the ingredients for the recipe
-            recipe_ingredients = recipe_info["ingredients"]
-
-            # Count matching ingredients using set intersection
-            ingredients_match = len(pantry_items.intersection(recipe_ingredients))
-
-            #Calculate match percentage
-            match_percentage = round(ingredients_match / len(recipe_ingredients) * 100, 0)
-
-            if match_percentage > best_match["match"]: # Check if this recipe is a better match
-                best_match["name"] = recipe_name
-                best_match["match"] = match_percentage
-
-        return best_match
-    
-    #Nutrition calculator method
-
-    def calculate_nutrition(self, recipe_name, servings):
-        recipe = RECIPES.get(recipe_name)  # Get the recipe details
-        nutrition = recipe["nutrition"]  # Get the nutrition information
-        return [
-            {"calories": nutrition["calories"] * servings},
-            {"protein": nutrition["protein"] * servings},
-            {"fat": nutrition["fat"] * servings},
-            {"carbs": nutrition["carbs"] * servings},
-        ]  # Return the nutrition information
-    
-    #Missing ingredients
-    def missing_ingredients(self, recipe_name, pantry_items) -> list:
-        recipe = RECIPES.get(recipe_name)
-        if not recipe:
-            return []
-        
-        recipe_ingredients = set(ingredient.lower() for ingredient in recipe["ingredients"])
-        missing = list(recipe_ingredients.difference(pantry_items))
-        return missing
 
 app = PantryChefApp() #This creates an instance of the PantryChefApp class
 
