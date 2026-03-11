@@ -14,11 +14,11 @@ def calculate_match(pantry_items):
         if match_percentage > best_pct:
             best_pct = match_percentage
             best = recipe
-    return best
+    return best, best_pct
 
 # Calculate nutrition information for a recipe
 def calculate_nutrition(recipe, servings):
-    nutrients = recipe['nutrition']['nutrients']
+    nutrients = recipe['nutrition']['nutrients'] 
     nutrient_map = {n["name"].lower(): n["amount"] for n in nutrients}
     result = {
         "calories": nutrient_map.get("calories", 0) * servings,
@@ -28,4 +28,11 @@ def calculate_nutrition(recipe, servings):
     }
     return result
 
-
+# Find missing ingredients for a recipe
+def missing_ingredients(recipe, pantry_items):
+    recipe_ingredients = recipe['extendedIngredients']
+    missing = []
+    for ingredient in recipe_ingredients:
+        if ingredient['name'] not in pantry_items:
+            missing.append(ingredient['name'])
+    return missing
