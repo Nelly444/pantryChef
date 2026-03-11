@@ -4,6 +4,7 @@ from spoonacular import find_ingredients, get_recipe_info
 
 st.title("PantryChef") #Title display
 
+#default values
 if "ingredients" not in st.session_state:
     st.session_state.ingredients = ""
 if "diet" not in st.session_state:
@@ -15,8 +16,7 @@ if "servings" not in st.session_state:
 if "reset" not in st.session_state:
     st.session_state.reset = False
 
-
-
+#Main class for the app
 class PantryChefApp:
 
     def __init__(self):
@@ -40,8 +40,6 @@ class PantryChefApp:
 
         numberOfServings = self.st.number_input("Enter the number of servings: ", min_value = 1, max_value = 20, key="servings")
 
-        
-
         return ingredientsList , dietPreferences, mealType, numberOfServings
     
     #Submit button code
@@ -53,8 +51,8 @@ class PantryChefApp:
                 pantry_items = set( 
                     item.strip().lower()
                     for item in ingredients.split(",")
-                    if item.strip()
-                )
+                    if item.strip() #filters out empty items
+                ) 
 
                 # Find the best matching recipe
                 best_match, best_pct = calculate_match(pantry_items)
@@ -67,7 +65,7 @@ class PantryChefApp:
                 self.st.subheader("Best Matching Recipe:")
                 self.st.write(f"Best Match: {best_match['title']} ({best_pct:.0f}% match)")
 
-                #Show nutrition info
+                #Nutrition information feature
                 nutrition_info = calculate_nutrition(recipe_info, servings)
 
                 self.st.subheader("Nutrition Information:")
@@ -81,7 +79,7 @@ class PantryChefApp:
 
                 self.st.subheader("Missing Ingredients:")
                 self.st.write(", ".join(missing) if missing else "You have all the ingredients!")
-                
+
     #Clear all the inputs
     def clear_button(self):
         if self.st.button("Clear"):
@@ -108,7 +106,6 @@ app = PantryChefApp() #This creates an instance of the PantryChefApp class
 
 ingredients, diet, meal, servings = app.get_input() #This is so that it can display in streamlit
 
-app.submit_button(ingredients, diet, meal, servings)
-app.clear_button()
+app.submit_button(ingredients, diet, meal, servings) #Submit button
 
-
+app.clear_button() #Clear button
