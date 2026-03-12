@@ -33,6 +33,6 @@ def missing_ingredients(recipe, pantry_items):
     recipe_ingredients = recipe['extendedIngredients']
     missing = []
     for ingredient in recipe_ingredients:
-        if ingredient['name'] not in pantry_items:
+        if ingredient['name'].lower() not in pantry_items:
             missing.append(ingredient['name'])
     return missing

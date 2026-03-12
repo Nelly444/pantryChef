@@ -13,7 +13,7 @@ def find_ingredients(ingredients):
     params = {
         "apiKey": API_KEY,
         "ingredients": ingredients,
-        "number": 4,
+        "number": 10,
         "ranking": 1,
         "ignorePantry": True
     }
