@@ -11,3 +11,23 @@ PantryChef is built with a three-file architecture that separates the UI, API, a
 - `recipe.py` — contains the core business logic: match percentage calculator, nutrition calculator, and missing ingredients finder.
 
 ## Setup
+
+1. Clone the repository
+```bash
+git clone https://github.com/Nelly444/pantryChef
+```
+
+2. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+3. Add your Spoonacular API key to `.env`
+```
+SPOONACULAR_API_KEY=your_key_here
+```
+
+4. Run the app
+```bash
+streamlit run user.py
+```
