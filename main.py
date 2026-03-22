@@ -10,9 +10,9 @@ class RecipeRequest(BaseModel):
     ingredients: list[str]
     dietary_restrictions: list[str] | None = None
     meal: str | None = None
-    serving: int | None = None
+    serving: int = 1
 
-@app.post("/recipes/suggest")
+@app.post("/recipes/suggest") #This POST request will suggest recipes based on user input
 def suggest_recipes(request: RecipeRequest):
     pantry_items = set(
         item.strip().lower()
@@ -39,3 +39,6 @@ def suggest_recipes(request: RecipeRequest):
         "nutrition": nutrition_info,
         "missing_ingredients": missing
     }
+@app.get("/")
+def home():
+    return {"message": "Welcome to the Pantry Chef API!"}
