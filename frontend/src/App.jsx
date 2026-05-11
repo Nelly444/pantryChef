@@ -91,7 +91,6 @@ export default function App() {
     if (key === 'cook') scrollToId('cook')
     if (key === 'result') scrollToId('result')
     if (key === 'matching') scrollToId('matching')
-    if (key === 'api') scrollToId('api')
   }
 
   const recipe = result?.recipe
@@ -156,7 +155,7 @@ export default function App() {
                       if (inputHint) setInputHint('')
                     }}
                     onKeyDown={handleKeyDown}
-                    className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none placeholder:text-green-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
+                    className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none placeholder:text-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                   />
                   <button
                     type="button"
@@ -239,7 +238,7 @@ export default function App() {
                     placeholder="e.g. vegetarian, gluten free"
                     value={dietaryText}
                     onChange={(e) => setDietaryText(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-green-950 outline-none placeholder:text-green-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
+                    className="mt-2 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-green-950 outline-none placeholder:text-gray-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                   />
                   <p className="mt-1 text-xs text-green-500">Separate multiple restrictions with commas.</p>
                 </div>
@@ -373,10 +372,16 @@ export default function App() {
 
                   <Accordion title="Recipe details">
                     {summaryPlain ? (
-                      <p className="whitespace-pre-wrap">
-                        {summaryPlain}
-                        {summaryFull.length > 720 ? '…' : ''}
-                      </p>
+                      <div className="space-y-3 leading-relaxed text-gray-700">
+                        {summaryPlain.split('. ').filter(Boolean).reduce((acc, s, i) => {
+                          const g = Math.floor(i / 3)
+                          if (!acc[g]) acc[g] = []
+                          acc[g].push(s.trim())
+                          return acc
+                        }, []).map((group, i) => (
+                          <p key={i}>{group.join('. ')}{group[group.length-1].endsWith('.') ? '' : '.'}</p>
+                        ))}
+                      </div>
                     ) : (
                       <p className="text-green-700/70">No summary available for this recipe.</p>
                     )}
@@ -421,24 +426,7 @@ export default function App() {
                     </Accordion>
                   </div>
 
-                  <div id="api">
-                    <Accordion title="API & local development">
-                      <p className="text-green-800/75">
-                        <span className="font-mono text-xs font-semibold text-green-950">POST /recipes/suggest</span>
-                        {' · '}
-                        Vite proxies <span className="font-mono text-xs font-semibold text-green-950">/recipes</span> →{' '}
-                        <span className="font-mono text-xs font-semibold text-green-950">127.0.0.1:8000</span>
-                      </p>
-                      <a
-                        className="mt-4 inline-flex rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-900 hover:bg-green-100"
-                        href={`${(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')}/docs`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open Swagger docs
-                      </a>
-                    </Accordion>
-                  </div>
+
                 </div>
               </div>
             ) : null}
