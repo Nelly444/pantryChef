@@ -12,54 +12,25 @@ export default function Header({ onNavigate }) {
           <span className="text-base sm:text-lg">PantryChef</span>
         </a>
 
-        {/* Nav */}
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-          <div className="relative group">
-            <button
-              type="button"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
-              onClick={() => onNavigate?.('cook')}
-            >
-              Pantry & Suggest
-            </button>
-          </div>
-          <div className="relative group">
-            <button
-              type="button"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
-              onClick={() => onNavigate?.('result')}
-            >
-              My Result
-            </button>
-          </div>
-          <div className="relative group">
-            <button
-              type="button"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
-              onClick={() => onNavigate?.('matching')}
-            >
-              How It Works
-            </button>
-          </div>
-        </nav>
-
-        {/* Badge */}
-        <span className="hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 sm:inline">
-          🌿 Pantry-first
-        </span>
-
-        {/* Mobile nav */}
-        <div className="flex items-center gap-2 md:hidden">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            className="rounded-lg p-2 text-green-700 hover:bg-green-50"
             onClick={() => onNavigate?.('cook')}
-            aria-label="Go to pantry"
+            className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-50 transition"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 10h16M7 6h10M6 14h12M9 18h6" strokeLinecap="round" />
-            </svg>
+            My Pantry
           </button>
+          <button
+            type="button"
+            onClick={() => onNavigate?.('result')}
+            className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-50 transition"
+          >
+            Result
+          </button>
+          <span className="hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 sm:inline">
+            🌿 Pantry-first
+          </span>
         </div>
       </div>
     </header>
