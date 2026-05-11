@@ -2,7 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv() # this reads the .env file
+load_dotenv()
 
 API_KEY = os.getenv("SPOONACULAR_API_KEY")
 
@@ -19,10 +19,10 @@ def find_ingredients(ingredients):
     }
 
     response = requests.get(url, params=params)
-    response.raise_for_status() #raises an error if request fails
+    response.raise_for_status()
     return response.json()
 
-# Get recipe information by ID
+
 def get_recipe_info(id):
     url = f"https://api.spoonacular.com/recipes/{id}/information"
     params = {
@@ -31,6 +31,6 @@ def get_recipe_info(id):
     }
 
     response = requests.get(url, params=params)
-    response.raise_for_status() #raises an error if request fails
+    response.raise_for_status()
     return response.json()
 

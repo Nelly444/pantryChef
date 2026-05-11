@@ -1,6 +1,6 @@
 from spoonacular import find_ingredients, get_recipe_info
 
-# Calculate match percentage for pantry items
+# spoonacular best pick
 def calculate_match(pantry_items):
     ingredients = list(pantry_items)
 
@@ -16,7 +16,7 @@ def calculate_match(pantry_items):
             best = recipe
     return best, best_pct
 
-# Calculate nutrition information for a recipe
+# nutrients × servings
 def calculate_nutrition(recipe, servings):
     nutrients = recipe['nutrition']['nutrients'] 
     nutrient_map = {n["name"].lower(): n["amount"] for n in nutrients}
@@ -28,7 +28,7 @@ def calculate_nutrition(recipe, servings):
     }
     return result
 
-# Find missing ingredients for a recipe
+# not in pantry set
 def missing_ingredients(recipe, pantry_items):
     recipe_ingredients = recipe['extendedIngredients']
     missing = []
