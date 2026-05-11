@@ -1,66 +1,65 @@
 export default function Header({ onNavigate }) {
   return (
-    <header className="sticky top-0 z-[150] border-b border-emerald-950/20 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 text-emerald-50 shadow-lg shadow-emerald-950/20">
+    <header className="sticky top-0 z-[150] border-b border-green-200 bg-white/95 shadow-sm backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <a href="#top" className="flex items-center gap-2 font-semibold tracking-tight text-emerald-50">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/15 ring-1 ring-emerald-400/25">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="stroke-emerald-200" strokeWidth="2">
+        {/* Logo */}
+        <a href="#top" className="flex items-center gap-2.5 font-bold tracking-tight text-green-900 no-underline">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-100 ring-1 ring-green-300">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-700">
               <path d="M4 10h16M7 6h10M6 14h12M9 18h6" strokeLinecap="round" />
             </svg>
           </span>
           <span className="text-base sm:text-lg">PantryChef</span>
         </a>
 
+        {/* Nav */}
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
-          <details className="relative group/d">
-            <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-sm font-medium text-emerald-100/90 outline-none ring-emerald-400/40 marker:hidden hover:bg-white/5 hover:text-white focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
-              Cook
-            </summary>
-            <div className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border border-emerald-800/60 bg-emerald-950/95 py-1 shadow-xl ring-1 ring-black/20 backdrop-blur-md">
-              <button
-                type="button"
-                className="block w-full px-4 py-2.5 text-left text-sm text-emerald-50/95 hover:bg-emerald-800/60"
-                onClick={() => onNavigate?.('cook')}
-              >
-                Pantry & suggest
-              </button>
-              <button
-                type="button"
-                className="block w-full px-4 py-2.5 text-left text-sm text-emerald-50/95 hover:bg-emerald-800/60"
-                onClick={() => onNavigate?.('result')}
-              >
-                Latest result
-              </button>
-            </div>
-          </details>
-
-          <details className="relative group/d">
-            <summary className="cursor-pointer list-none rounded-lg px-3 py-2 text-sm font-medium text-emerald-100/90 outline-none ring-emerald-400/40 marker:hidden hover:bg-white/5 hover:text-white focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
-              Learn
-            </summary>
-            <div className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-emerald-800/60 bg-emerald-950/95 py-1 shadow-xl ring-1 ring-black/20 backdrop-blur-md">
-              <button
-                type="button"
-                className="block w-full px-4 py-2.5 text-left text-sm text-emerald-50/95 hover:bg-emerald-800/60"
-                onClick={() => onNavigate?.('matching')}
-              >
-                How matching works
-              </button>
-              <button
-                type="button"
-                className="block w-full px-4 py-2.5 text-left text-sm text-emerald-50/95 hover:bg-emerald-800/60"
-                onClick={() => onNavigate?.('api')}
-              >
-                API & docs
-              </button>
-            </div>
-          </details>
+          <div className="relative group">
+            <button
+              type="button"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
+              onClick={() => onNavigate?.('cook')}
+            >
+              Pantry & Suggest
+            </button>
+          </div>
+          <div className="relative group">
+            <button
+              type="button"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
+              onClick={() => onNavigate?.('result')}
+            >
+              My Result
+            </button>
+          </div>
+          <div className="relative group">
+            <button
+              type="button"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 outline-none hover:bg-green-50 hover:text-green-900 focus-visible:ring-2 focus-visible:ring-green-400"
+              onClick={() => onNavigate?.('matching')}
+            >
+              How It Works
+            </button>
+          </div>
         </nav>
 
-        <div className="flex items-center gap-2">
-          <span className="hidden rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-100/90 sm:inline">
-            Full stack
-          </span>
+        {/* Badge */}
+        <span className="hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 sm:inline">
+          🌿 Pantry-first
+        </span>
+
+        {/* Mobile nav */}
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            type="button"
+            className="rounded-lg p-2 text-green-700 hover:bg-green-50"
+            onClick={() => onNavigate?.('cook')}
+            aria-label="Go to pantry"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M4 10h16M7 6h10M6 14h12M9 18h6" strokeLinecap="round" />
+            </svg>
+          </button>
         </div>
       </div>
     </header>
