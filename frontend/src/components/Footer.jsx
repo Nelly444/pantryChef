@@ -13,7 +13,7 @@ export default function Footer() {
         <div className="flex gap-6 text-sm">
           <a className="text-green-200/70 transition hover:text-white" href="#cook">Pantry</a>
           <a className="text-green-200/70 transition hover:text-white" href="#result">Result</a>
-          <a className="text-green-200/70 transition hover:text-white" href="#matching">How it works</a>
+
         </div>
       </div>
       <div className="border-t border-green-800 py-3 text-center text-xs text-green-300/40">
