@@ -1,37 +1,32 @@
 export default function Header({ onNavigate }) {
   return (
-    <header className="sticky top-0 z-[150] border-b border-green-200 bg-white/95 shadow-sm backdrop-blur-sm">
+    <header className="sticky top-0 z-[150] border-b-2 border-[#d4a853]/40 bg-[#2c1f0e] shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        {/* Logo */}
-        <a href="#top" className="flex items-center gap-2.5 font-bold tracking-tight text-green-900 no-underline">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-100 ring-1 ring-green-300">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-700">
-              <path d="M4 10h16M7 6h10M6 14h12M9 18h6" strokeLinecap="round" />
-            </svg>
+        <a href="#top" className="flex items-center gap-3 no-underline">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#d4a853]/20 ring-2 ring-[#d4a853]/40 text-xl">
+            🌿
           </span>
-          <span className="text-base sm:text-lg">PantryChef</span>
+          <span style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-lg font-bold italic tracking-wide text-[#faf7f2] sm:text-xl">
+            PantryChef
+          </span>
         </a>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        <nav className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => onNavigate?.('cook')}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-50 transition"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#d4a853] transition hover:bg-white/10"
           >
             My Pantry
           </button>
           <button
             type="button"
             onClick={() => onNavigate?.('result')}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-green-800 hover:bg-green-50 transition"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#a8c49a] transition hover:bg-white/10"
           >
-            Result
+            Recipe
           </button>
-          <span className="hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-semibold text-green-700 sm:inline">
-            🌿 Pantry-first
-          </span>
-        </div>
+        </nav>
       </div>
     </header>
   )

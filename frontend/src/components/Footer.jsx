@@ -1,24 +1,33 @@
-export default function Footer() {
+export default function Header({ onNavigate }) {
   return (
-    <footer className="mt-auto border-t border-green-200 bg-green-900 text-green-100">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div>
-          <p className="flex items-center gap-2 text-sm font-bold text-white">
-            🌿 PantryChef
-          </p>
-          <p className="mt-1 text-sm text-green-200/70">
-            Cook great food from what you already have.
-          </p>
-        </div>
-        <div className="flex gap-6 text-sm">
-          <a className="text-green-200/70 transition hover:text-white" href="#cook">Pantry</a>
-          <a className="text-green-200/70 transition hover:text-white" href="#result">Result</a>
+    <header className="sticky top-0 z-[150] border-b-2 border-[#d4a853]/40 bg-[#2c1f0e] shadow-lg">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <a href="#top" className="flex items-center gap-3 no-underline">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#d4a853]/20 ring-2 ring-[#d4a853]/40 text-xl">
+            🌿
+          </span>
+          <span style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-lg font-bold italic tracking-wide text-[#faf7f2] sm:text-xl">
+            PantryChef
+          </span>
+        </a>
 
-        </div>
+        <nav className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onNavigate?.('cook')}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#d4a853] transition hover:bg-white/10"
+          >
+            My Pantry
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate?.('result')}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#a8c49a] transition hover:bg-white/10"
+          >
+            Recipe
+          </button>
+        </nav>
       </div>
-      <div className="border-t border-green-800 py-3 text-center text-xs text-green-300/40">
-        © {new Date().getFullYear()} PantryChef
-      </div>
-    </footer>
+    </header>
   )
 }
