@@ -95,7 +95,6 @@ export default function App() {
   const handleNavigate = (key) => {
     if (key === 'cook') scrollToId('cook')
     if (key === 'result') scrollToId('result')
-    if (key === 'matching') scrollToId('matching')
   }
 
   const recipe = result?.recipe
