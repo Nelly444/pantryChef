@@ -23,6 +23,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+  const [history, setHistory] = useState([]) // [{result, ingredients, timestamp}]
 
   const addIngredient = useCallback(
     (raw) => {
@@ -79,6 +80,10 @@ export default function App() {
       }
       const data = await suggestRecipe(payload)
       setResult(data)
+      setHistory(prev => [
+        { result: data, ingredients: [...ingredientsList], timestamp: new Date() },
+        ...prev.slice(0, 4), // keep last 5
+      ])
       requestAnimationFrame(() => scrollToId('result'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
@@ -122,23 +127,34 @@ export default function App() {
                   <h2 className="text-lg font-semibold text-green-950">Your Pantry</h2>
                   <p className="mt-1 text-sm text-green-700/70">What you have right now.</p>
                 </div>
-                <details className="relative">
-                  <summary className="cursor-pointer list-none rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800 marker:hidden outline-none hover:bg-green-100 focus-visible:ring-2 focus-visible:ring-green-400 [&::-webkit-details-marker]:hidden">
-                    Quick add
-                  </summary>
-                  <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-green-200 bg-white py-1 shadow-xl">
-                    {STAPLES.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        className="block w-full px-4 py-2.5 text-left text-sm text-green-950 hover:bg-green-50"
-                        onClick={() => addIngredient(s)}
-                      >
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </details>
+                <div className="flex items-center gap-2">
+                  {ingredientsList.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIngredientsList([])}
+                      className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition"
+                    >
+                      Clear all
+                    </button>
+                  )}
+                  <details className="relative">
+                    <summary className="cursor-pointer list-none rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800 marker:hidden outline-none hover:bg-green-100 focus-visible:ring-2 focus-visible:ring-green-400 [&::-webkit-details-marker]:hidden">
+                      Quick add
+                    </summary>
+                    <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-green-200 bg-white py-1 shadow-xl">
+                      {STAPLES.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className="block w-full px-4 py-2.5 text-left text-sm text-green-950 hover:bg-green-50"
+                          onClick={() => addIngredient(s)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                </div>
               </div>
 
               <div className="mt-5">
@@ -256,6 +272,30 @@ export default function App() {
 
           {/* Right: Results */}
           <div id="result" className="lg:col-span-7">
+            {/* Recent history strip */}
+            {history.length > 1 && (
+              <div className="mb-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-green-700">Recent searches</p>
+                <div className="flex flex-wrap gap-2">
+                  {history.slice(1).map((h, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setResult(h.result)
+                        setIngredientsList(h.ingredients)
+                        requestAnimationFrame(() => scrollToId('result'))
+                      }}
+                      className="flex items-center gap-1.5 rounded-full border border-green-200 bg-white px-3 py-1.5 text-xs font-medium text-green-800 shadow-sm hover:bg-green-50 transition"
+                    >
+                      <span className="text-green-400">🍽</span>
+                      {h.result?.recipe?.title?.slice(0, 28) ?? 'Recipe'}
+                      {h.result?.recipe?.title?.length > 28 ? '…' : ''}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {error ? (
               <div
                 role="alert"
@@ -307,7 +347,17 @@ export default function App() {
                     </div>
 
                     <div className="p-5 md:col-span-3">
-                      <h2 className="text-2xl font-bold tracking-tight text-green-950">{recipe.title}</h2>
+                      <div className="flex items-start justify-between gap-2">
+                        <h2 className="text-2xl font-bold tracking-tight text-green-950">{recipe.title}</h2>
+                        <button
+                          type="button"
+                          onClick={() => window.print()}
+                          className="shrink-0 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition"
+                          title="Print recipe"
+                        >
+                          🖨 Print
+                        </button>
+                      </div>
                       <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                         {typeof recipe.readyInMinutes === 'number' ? (
                           <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">
@@ -373,14 +423,17 @@ export default function App() {
                   <Accordion title="Recipe details">
                     {summaryPlain ? (
                       <div className="space-y-3 leading-relaxed text-gray-700">
-                        {summaryPlain.split('. ').filter(Boolean).reduce((acc, s, i) => {
-                          const g = Math.floor(i / 3)
-                          if (!acc[g]) acc[g] = []
-                          acc[g].push(s.trim())
-                          return acc
-                        }, []).map((group, i) => (
-                          <p key={i}>{group.join('. ')}{group[group.length-1].endsWith('.') ? '' : '.'}</p>
-                        ))}
+                        {(() => {
+                          // Split on sentence-ending punctuation followed by a space+capital, preserving the punctuation
+                          const sentences = summaryPlain.match(/[^.!?]+[.!?]+(\s|$)/g) || [summaryPlain]
+                          const cleaned = sentences.map(s => s.trim()).filter(Boolean)
+                          // Group into paragraphs of 3 sentences
+                          const paras = []
+                          for (let i = 0; i < cleaned.length; i += 3) {
+                            paras.push(cleaned.slice(i, i + 3).join(' '))
+                          }
+                          return paras.map((p, i) => <p key={i}>{p}</p>)
+                        })()}
                       </div>
                     ) : (
                       <p className="text-green-700/70">No summary available for this recipe.</p>
