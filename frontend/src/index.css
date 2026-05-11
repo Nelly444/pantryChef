@@ -7,10 +7,7 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply min-h-screen bg-emerald-50/60 font-sans text-emerald-950 antialiased;
-    background-image:
-      radial-gradient(1200px 500px at 20% -10%, rgba(16, 185, 129, 0.14), transparent 55%),
-      radial-gradient(900px 420px at 90% 0%, rgba(5, 150, 105, 0.1), transparent 50%);
+    @apply min-h-screen bg-green-50 font-sans text-green-950 antialiased;
   }
 }
 

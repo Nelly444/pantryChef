@@ -100,36 +100,39 @@ export default function App() {
   const nutrition = result?.nutrition
 
   return (
-    <div id="top" className="flex min-h-screen flex-col">
+    <div id="top" className="flex min-h-screen flex-col bg-green-50">
       <TopProgress active={loading} />
       <Header onNavigate={handleNavigate} />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         <section className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight text-emerald-950 sm:text-4xl">Cook from what you already have</h1>
-          <p className="mt-3 max-w-2xl text-base leading-relaxed text-emerald-900/70">
-            Pantry in → one match, nutrition for your servings, gaps listed.
+          <h1 className="text-3xl font-bold tracking-tight text-green-950 sm:text-4xl">
+            Cook from what you already have
+          </h1>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-green-800/70">
+            Add your pantry items → get one great recipe match, see what's missing, and check nutrition scaled to your servings.
           </p>
         </section>
 
         <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
+          {/* Left: Pantry form */}
           <div id="cook" className="lg:col-span-5">
-            <div className="rounded-2xl border border-emerald-200/90 bg-white/85 p-5 shadow-sm ring-1 ring-emerald-950/[0.04] backdrop-blur-sm sm:p-6">
+            <div className="rounded-2xl border border-green-200 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-emerald-950">Pantry</h2>
-                  <p className="mt-1 text-sm text-emerald-900/65">What you have now.</p>
+                  <h2 className="text-lg font-semibold text-green-950">Your Pantry</h2>
+                  <p className="mt-1 text-sm text-green-700/70">What you have right now.</p>
                 </div>
                 <details className="relative">
-                  <summary className="cursor-pointer list-none rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900 marker:hidden outline-none ring-emerald-500/30 focus-visible:ring-2 [&::-webkit-details-marker]:hidden">
+                  <summary className="cursor-pointer list-none rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-800 marker:hidden outline-none hover:bg-green-100 focus-visible:ring-2 focus-visible:ring-green-400 [&::-webkit-details-marker]:hidden">
                     Quick add
                   </summary>
-                  <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-emerald-200 bg-white py-1 shadow-xl ring-1 ring-emerald-950/10">
+                  <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-green-200 bg-white py-1 shadow-xl">
                     {STAPLES.map((s) => (
                       <button
                         key={s}
                         type="button"
-                        className="block w-full px-4 py-2.5 text-left text-sm text-emerald-950 hover:bg-emerald-50"
+                        className="block w-full px-4 py-2.5 text-left text-sm text-green-950 hover:bg-green-50"
                         onClick={() => addIngredient(s)}
                       >
                         {s}
@@ -140,9 +143,7 @@ export default function App() {
               </div>
 
               <div className="mt-5">
-                <label htmlFor="ingredient" className="sr-only">
-                  Ingredient name
-                </label>
+                <label htmlFor="ingredient" className="sr-only">Ingredient name</label>
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
                   <input
                     id="ingredient"
@@ -155,17 +156,17 @@ export default function App() {
                       if (inputHint) setInputHint('')
                     }}
                     onKeyDown={handleKeyDown}
-                    className="w-full rounded-xl border border-emerald-200/90 bg-white px-4 py-3 text-sm text-emerald-950 shadow-inner shadow-emerald-950/5 outline-none ring-emerald-500/30 placeholder:text-emerald-900/35 focus:border-emerald-300 focus:ring-2"
+                    className="w-full rounded-xl border border-green-200 bg-white px-4 py-3 text-sm text-green-950 outline-none placeholder:text-green-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                   />
                   <button
                     type="button"
                     onClick={handleAddIngredient}
-                    className="inline-flex items-center justify-center rounded-xl bg-emerald-800 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-emerald-950/10 outline-none ring-emerald-500/30 transition hover:bg-emerald-900 focus-visible:ring-2 active:translate-y-px sm:w-36"
+                    className="inline-flex items-center justify-center rounded-xl bg-green-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 active:translate-y-px sm:w-28"
                   >
                     Add
                   </button>
                 </div>
-                {inputHint ? <p className="mt-2 text-sm text-amber-800">{inputHint}</p> : null}
+                {inputHint ? <p className="mt-2 text-sm text-amber-700">{inputHint}</p> : null}
               </div>
 
               {ingredientsList.length > 0 ? (
@@ -173,12 +174,12 @@ export default function App() {
                   {ingredientsList.map((item) => (
                     <span
                       key={item}
-                      className="inline-flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-100/70 px-3 py-1 text-sm font-medium text-emerald-950"
+                      className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-100 px-3 py-1 text-sm font-medium text-green-900"
                     >
                       {item}
                       <button
                         type="button"
-                        className="ml-1 grid h-6 w-6 place-items-center rounded-full text-emerald-800/80 outline-none ring-emerald-500/30 hover:bg-white/60 hover:text-emerald-950 focus-visible:ring-2"
+                        className="ml-1 grid h-5 w-5 place-items-center rounded-full text-green-600 hover:bg-green-200 hover:text-green-900"
                         onClick={() => setIngredientsList((prev) => prev.filter((x) => x !== item))}
                         aria-label={`Remove ${item}`}
                       >
@@ -188,15 +189,15 @@ export default function App() {
                   ))}
                 </div>
               ) : (
-                <p className="mt-5 rounded-xl border border-dashed border-emerald-200/90 bg-emerald-50/40 px-4 py-3 text-sm text-emerald-900/65">
-                  Type or Enter to add, or Quick add.
+                <p className="mt-5 rounded-xl border border-dashed border-green-200 bg-green-50 px-4 py-3 text-sm text-green-600">
+                  Type an ingredient and press Enter, or use Quick add.
                 </p>
               )}
 
-              <form className="mt-7 space-y-4 border-t border-emerald-100 pt-6" onSubmit={handleSuggest}>
+              <form className="mt-7 space-y-4 border-t border-green-100 pt-6" onSubmit={handleSuggest}>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label htmlFor="servings" className="block text-xs font-semibold uppercase tracking-wide text-emerald-900/55">
+                    <label htmlFor="servings" className="block text-xs font-semibold uppercase tracking-wide text-green-700">
                       Servings
                     </label>
                     <input
@@ -205,18 +206,18 @@ export default function App() {
                       min={1}
                       value={serving}
                       onChange={(e) => setServing(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-emerald-200/90 bg-white px-3 py-2.5 text-sm text-emerald-950 outline-none ring-emerald-500/30 focus:border-emerald-300 focus:ring-2"
+                      className="mt-2 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-green-950 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                     />
                   </div>
                   <div>
-                    <label htmlFor="meal" className="block text-xs font-semibold uppercase tracking-wide text-emerald-900/55">
+                    <label htmlFor="meal" className="block text-xs font-semibold uppercase tracking-wide text-green-700">
                       Meal focus
                     </label>
                     <select
                       id="meal"
                       value={meal}
                       onChange={(e) => setMeal(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-emerald-200/90 bg-white px-3 py-2.5 text-sm text-emerald-950 outline-none ring-emerald-500/30 focus:border-emerald-300 focus:ring-2"
+                      className="mt-2 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-green-950 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                     >
                       <option value="">Any</option>
                       <option value="breakfast">Breakfast</option>
@@ -229,7 +230,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label htmlFor="dietary" className="block text-xs font-semibold uppercase tracking-wide text-emerald-900/55">
+                  <label htmlFor="dietary" className="block text-xs font-semibold uppercase tracking-wide text-green-700">
                     Dietary notes
                   </label>
                   <input
@@ -238,15 +239,15 @@ export default function App() {
                     placeholder="e.g. vegetarian, gluten free"
                     value={dietaryText}
                     onChange={(e) => setDietaryText(e.target.value)}
-                    className="mt-2 w-full rounded-xl border border-emerald-200/90 bg-white px-3 py-2.5 text-sm text-emerald-950 outline-none ring-emerald-500/30 placeholder:text-emerald-900/35 focus:border-emerald-300 focus:ring-2"
+                    className="mt-2 w-full rounded-xl border border-green-200 bg-white px-3 py-2.5 text-sm text-green-950 outline-none placeholder:text-green-400 focus:border-green-400 focus:ring-2 focus:ring-green-400/20"
                   />
-                  <p className="mt-1 text-xs text-emerald-900/50">Comma-separated → API list.</p>
+                  <p className="mt-1 text-xs text-green-500">Separate multiple restrictions with commas.</p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-emerald-800 px-4 py-3.5 text-sm font-semibold text-white shadow-sm shadow-emerald-950/15 outline-none ring-emerald-500/30 transition hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:ring-2"
+                  className="w-full rounded-xl bg-green-700 px-4 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? 'Finding your best match…' : 'Suggest recipe'}
                 </button>
@@ -254,17 +255,18 @@ export default function App() {
             </div>
           </div>
 
+          {/* Right: Results */}
           <div id="result" className="lg:col-span-7">
             {error ? (
               <div
                 role="alert"
-                className="rounded-2xl border border-red-200 bg-red-50/80 p-5 text-sm text-red-900 shadow-sm ring-1 ring-red-950/10"
+                className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-900 shadow-sm"
               >
-                <p className="font-semibold">We could not complete that request</p>
+                <p className="font-semibold">Could not complete that request</p>
                 <p className="mt-2 leading-relaxed">{error}</p>
                 <button
                   type="button"
-                  className="mt-4 rounded-xl border border-red-300/80 bg-white px-4 py-2 text-sm font-semibold text-red-900 hover:bg-red-50"
+                  className="mt-4 rounded-xl border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-800 hover:bg-red-50"
                   onClick={() => setError('')}
                 >
                   Dismiss
@@ -273,15 +275,20 @@ export default function App() {
             ) : null}
 
             {!result && !error ? (
-              <div className="rounded-2xl border border-emerald-200/90 bg-white/70 p-6 text-sm leading-relaxed text-emerald-900/70 shadow-sm ring-1 ring-emerald-950/[0.03] backdrop-blur-sm">
-                <p className="font-semibold text-emerald-950">Your recipe card will appear here</p>
-                <p className="mt-2">Add items → <span className="font-semibold text-emerald-900">Suggest recipe</span>.</p>
+              <div className="rounded-2xl border border-green-200 bg-white p-8 text-center shadow-sm">
+                <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-green-100">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="text-green-600">
+                    <path d="M4 10h16M7 6h10M6 14h12M9 18h6" strokeLinecap="round" />
+                  </svg>
+                </div>
+                <p className="font-semibold text-green-950">Your recipe card will appear here</p>
+                <p className="mt-2 text-sm text-green-700/70">Add pantry items and click <span className="font-semibold text-green-800">Suggest recipe</span>.</p>
               </div>
             ) : null}
 
             {result && recipe ? (
               <div className="space-y-5">
-                <div className="overflow-hidden rounded-2xl border border-emerald-200/90 bg-white shadow-md ring-1 ring-emerald-950/[0.04]">
+                <div className="overflow-hidden rounded-2xl border border-green-200 bg-white shadow-md">
                   <div className="grid gap-0 md:grid-cols-5">
                     <div className="relative md:col-span-2">
                       {recipe.image ? (
@@ -291,35 +298,33 @@ export default function App() {
                           className="h-48 w-full object-cover md:h-full md:min-h-[220px]"
                         />
                       ) : (
-                        <div className="flex h-48 items-center justify-center bg-emerald-100/60 text-sm font-medium text-emerald-900/60 md:h-full">
+                        <div className="flex h-48 items-center justify-center bg-green-100 text-sm font-medium text-green-600 md:h-full">
                           No image
                         </div>
                       )}
-                      <div className="absolute left-3 top-3 rounded-full border border-white/40 bg-emerald-950/85 px-3 py-1 text-xs font-semibold text-emerald-50 shadow-sm backdrop-blur">
+                      <div className="absolute left-3 top-3 rounded-full border border-white/60 bg-green-800/90 px-3 py-1 text-xs font-semibold text-white shadow-sm">
                         {result.match_percentage}% pantry match
                       </div>
                     </div>
 
                     <div className="p-5 md:col-span-3">
-                      <h2 className="text-2xl font-bold tracking-tight text-emerald-950">{recipe.title}</h2>
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-emerald-900/70">
+                      <h2 className="text-2xl font-bold tracking-tight text-green-950">{recipe.title}</h2>
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                         {typeof recipe.readyInMinutes === 'number' ? (
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900">
+                          <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">
                             {recipe.readyInMinutes} min
                           </span>
                         ) : null}
                         {typeof recipe.servings === 'number' ? (
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900">
-                            Base servings: {recipe.servings}
+                          <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">
+                            Serves {recipe.servings}
                           </span>
                         ) : null}
                         {recipe.vegetarian ? (
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900">
-                            Vegetarian
-                          </span>
+                          <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">Vegetarian</span>
                         ) : null}
                         {recipe.vegan ? (
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-900">Vegan</span>
+                          <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">Vegan</span>
                         ) : null}
                       </div>
 
@@ -327,13 +332,13 @@ export default function App() {
                         <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                           {[
                             ['Calories', Math.round(nutrition.calories ?? 0)],
-                            ['Protein (g)', Math.round(nutrition.protein ?? 0)],
-                            ['Fat (g)', Math.round(nutrition.fat ?? 0)],
-                            ['Carbs (g)', Math.round(nutrition.carbs ?? 0)],
+                            ['Protein', `${Math.round(nutrition.protein ?? 0)}g`],
+                            ['Fat', `${Math.round(nutrition.fat ?? 0)}g`],
+                            ['Carbs', `${Math.round(nutrition.carbs ?? 0)}g`],
                           ].map(([label, val]) => (
-                            <div key={label} className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 px-3 py-2">
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-900/55">{label}</p>
-                              <p className="mt-1 text-lg font-bold text-emerald-950">{val}</p>
+                            <div key={label} className="rounded-xl border border-green-100 bg-green-50 px-3 py-2">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-green-600">{label}</p>
+                              <p className="mt-1 text-lg font-bold text-green-950">{val}</p>
                             </div>
                           ))}
                         </div>
@@ -341,12 +346,12 @@ export default function App() {
 
                       {recipe.sourceUrl ? (
                         <a
-                          className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 underline decoration-emerald-300/80 underline-offset-4 hover:text-emerald-950"
+                          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-green-700 underline underline-offset-4 hover:text-green-900"
                           href={recipe.sourceUrl}
                           target="_blank"
                           rel="noreferrer"
                         >
-                          View original source
+                          View original recipe ↗
                         </a>
                       ) : null}
                     </div>
@@ -354,7 +359,7 @@ export default function App() {
                 </div>
 
                 <div className="space-y-3">
-                  <Accordion title="Missing ingredients & quick shop list" defaultOpen>
+                  <Accordion title="Missing ingredients" defaultOpen>
                     {result.missing_ingredients?.length ? (
                       <ul className="list-disc space-y-2 pl-5">
                         {result.missing_ingredients.map((m) => (
@@ -362,7 +367,7 @@ export default function App() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-emerald-900/70">Looks complete vs your list.</p>
+                      <p className="text-green-700/70">You have everything for this recipe!</p>
                     )}
                   </Accordion>
 
@@ -373,7 +378,7 @@ export default function App() {
                         {summaryFull.length > 720 ? '…' : ''}
                       </p>
                     ) : (
-                      <p className="text-emerald-900/70">No summary was provided for this recipe.</p>
+                      <p className="text-green-700/70">No summary available for this recipe.</p>
                     )}
                   </Accordion>
 
@@ -381,57 +386,51 @@ export default function App() {
                     {Array.isArray(recipe.extendedIngredients) && recipe.extendedIngredients.length > 0 ? (
                       <ul className="space-y-2">
                         {recipe.extendedIngredients.map((ing) => (
-                          <li key={ing.id ?? ing.original} className="flex gap-2 border-b border-emerald-100/80 py-2 last:border-0">
-                            <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-400/90" aria-hidden />
+                          <li key={ing.id ?? ing.original} className="flex gap-2 border-b border-green-100 py-2 last:border-0">
+                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-green-400" aria-hidden />
                             <span>{ing.original || ing.name}</span>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-emerald-900/70">Ingredient list unavailable.</p>
+                      <p className="text-green-700/70">Ingredient list unavailable.</p>
                     )}
                   </Accordion>
 
-                  <Accordion title="Nutrition (scaled)">
-                    <p className="text-emerald-900/75">Numbers use your servings × API scaling.</p>
+                  <Accordion title="Nutrition (scaled to your servings)">
                     {nutrition ? (
-                      <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <div className="rounded-lg bg-emerald-50/60 px-3 py-2">
-                          <dt className="text-xs font-semibold text-emerald-900/55">Calories</dt>
-                          <dd className="text-base font-bold text-emerald-950">{Math.round(nutrition.calories ?? 0)}</dd>
-                        </div>
-                        <div className="rounded-lg bg-emerald-50/60 px-3 py-2">
-                          <dt className="text-xs font-semibold text-emerald-900/55">Protein</dt>
-                          <dd className="text-base font-bold text-emerald-950">{Math.round(nutrition.protein ?? 0)} g</dd>
-                        </div>
-                        <div className="rounded-lg bg-emerald-50/60 px-3 py-2">
-                          <dt className="text-xs font-semibold text-emerald-900/55">Fat</dt>
-                          <dd className="text-base font-bold text-emerald-950">{Math.round(nutrition.fat ?? 0)} g</dd>
-                        </div>
-                        <div className="rounded-lg bg-emerald-50/60 px-3 py-2">
-                          <dt className="text-xs font-semibold text-emerald-900/55">Carbs</dt>
-                          <dd className="text-base font-bold text-emerald-950">{Math.round(nutrition.carbs ?? 0)} g</dd>
-                        </div>
+                      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {[
+                          ['Calories', Math.round(nutrition.calories ?? 0), ''],
+                          ['Protein', Math.round(nutrition.protein ?? 0), 'g'],
+                          ['Fat', Math.round(nutrition.fat ?? 0), 'g'],
+                          ['Carbs', Math.round(nutrition.carbs ?? 0), 'g'],
+                        ].map(([label, val, unit]) => (
+                          <div key={label} className="rounded-lg bg-green-50 px-3 py-2">
+                            <dt className="text-xs font-semibold text-green-600">{label}</dt>
+                            <dd className="text-base font-bold text-green-950">{val}{unit}</dd>
+                          </div>
+                        ))}
                       </dl>
                     ) : null}
                   </Accordion>
 
                   <div id="matching">
                     <Accordion title="How matching works">
-                      <p className="text-emerald-900/75">% = used vs missed ingredients in Spoonacular results, not taste.</p>
+                      <p className="text-green-800/75">Match % is based on how many of the recipe's ingredients you already have vs. what's missing — not flavor compatibility.</p>
                     </Accordion>
                   </div>
 
                   <div id="api">
                     <Accordion title="API & local development">
-                      <p className="text-emerald-900/75">
-                        <span className="font-mono text-xs font-semibold text-emerald-950">POST /recipes/suggest</span>
+                      <p className="text-green-800/75">
+                        <span className="font-mono text-xs font-semibold text-green-950">POST /recipes/suggest</span>
                         {' · '}
-                        dev: Vite proxies <span className="font-mono text-xs font-semibold text-emerald-950">/recipes</span> →{' '}
-                        <span className="font-mono text-xs font-semibold text-emerald-950">127.0.0.1:8000</span>
+                        Vite proxies <span className="font-mono text-xs font-semibold text-green-950">/recipes</span> →{' '}
+                        <span className="font-mono text-xs font-semibold text-green-950">127.0.0.1:8000</span>
                       </p>
                       <a
-                        className="mt-4 inline-flex rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-100"
+                        className="mt-4 inline-flex rounded-xl border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-900 hover:bg-green-100"
                         href={`${(import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')}/docs`}
                         target="_blank"
                         rel="noreferrer"
