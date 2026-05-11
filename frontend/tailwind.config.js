@@ -1,27 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
+  content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-      },
       colors: {
-        brand: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#10b981',
-          600: '#059669',
-          700: '#047857',
-          800: '#065f46',
-          900: '#064e3b',
-          950: '#022c22',
-        },
+        cream:  { DEFAULT: '#faf7f2', dark: '#f0ead8' },
+        bark:   { DEFAULT: '#2c1f0e', light: '#5c3d1e' },
+        sage:   { DEFAULT: '#7a9e6e', light: '#a8c49a', dark: '#4e7a42' },
+        terra:  { DEFAULT: '#c4622d', light: '#e8855a', dark: '#8f3e14' },
+        wheat:  { DEFAULT: '#d4a853', light: '#e8cc8a' },
+      },
+      fontFamily: {
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+        body:    ['Lato', 'sans-serif'],
       },
     },
   },
