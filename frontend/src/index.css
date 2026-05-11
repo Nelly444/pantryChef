@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply min-h-screen bg-emerald-50/60 font-sans text-emerald-950 antialiased;
+    background-image:
+      radial-gradient(1200px 500px at 20% -10%, rgba(16, 185, 129, 0.14), transparent 55%),
+      radial-gradient(900px 420px at 90% 0%, rgba(5, 150, 105, 0.1), transparent 50%);
+  }
+}
+
+@keyframes indeterminate-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+.indeterminate-bar {
+  animation: indeterminate-bar 1.05s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .indeterminate-bar {
+    animation: none;
+    transform: translateX(0);
+    width: 100%;
+    opacity: 0.65;
+  }
+}
