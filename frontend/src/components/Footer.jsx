@@ -1,33 +1,23 @@
-export default function Header({ onNavigate }) {
+export default function Footer() {
   return (
-    <header className="sticky top-0 z-[150] border-b-2 border-[#d4a853]/40 bg-[#2c1f0e] shadow-lg">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <a href="#top" className="flex items-center gap-3 no-underline">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#d4a853]/20 ring-2 ring-[#d4a853]/40 text-xl">
-            🌿
-          </span>
-          <span style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-lg font-bold italic tracking-wide text-[#faf7f2] sm:text-xl">
-            PantryChef
-          </span>
-        </a>
-
-        <nav className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => onNavigate?.('cook')}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#d4a853] transition hover:bg-white/10"
-          >
-            My Pantry
-          </button>
-          <button
-            type="button"
-            onClick={() => onNavigate?.('result')}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-[#a8c49a] transition hover:bg-white/10"
-          >
-            Recipe
-          </button>
-        </nav>
+    <footer className="mt-auto border-t-2 border-[#d4a853]/30 bg-[#2c1f0e]">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div>
+          <p style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-lg font-bold italic text-[#d4a853]">
+            🌿 PantryChef
+          </p>
+          <p className="mt-1 text-sm text-[#faf7f2]/50">
+            Cook great food from what you already have.
+          </p>
+        </div>
+        <div className="flex gap-6 text-sm">
+          <a className="text-[#a8c49a] transition hover:text-white" href="#cook">Pantry</a>
+          <a className="text-[#a8c49a] transition hover:text-white" href="#result">Result</a>
+        </div>
       </div>
-    </header>
+      <div className="border-t border-[#d4a853]/10 py-3 text-center text-xs text-[#faf7f2]/25">
+        © {new Date().getFullYear()} PantryChef
+      </div>
+    </footer>
   )
 }
