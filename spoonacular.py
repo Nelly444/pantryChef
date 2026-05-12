@@ -100,10 +100,10 @@ def find_recipes(
         params["type"] = meal
 
     if servings is not None:
-        # Ask Spoonacular to only return recipes whose native serving count
-        # is within ±1-2 of what the user requested, so a "4 servings" search
-        # doesn't surface a recipe that feeds 12.
-        params["minServings"] = max(1, servings - 1)
+        # minServings = N so a recipe that serves fewer people than requested
+        # is never returned (e.g. serving=2 won't surface a 1-person recipe).
+        # maxServings = N+2 allows a little headroom — leftovers are fine.
+        params["minServings"] = servings
         params["maxServings"] = servings + 2
 
     try:
