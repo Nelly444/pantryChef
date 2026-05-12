@@ -24,8 +24,6 @@ export default function Footer() {
               <li><a className="text-[#f4f0e6]/60 transition hover:text-[#d8e4c0]" href="#top">Back to top</a></li>
             </ul>
           </div>
-
-          {/* Built with */}
           <div>
             <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#8a9a6a]">Built with</p>
             <ul className="space-y-2 text-sm text-[#f4f0e6]/60">
