@@ -4,11 +4,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cream:  { DEFAULT: '#faf7f2', dark: '#f0ead8' },
+        cream:  { DEFAULT: '#f4f0e6', dark: '#e2ead4' },
         bark:   { DEFAULT: '#2c1f0e', light: '#5c3d1e' },
         sage:   { DEFAULT: '#7a9e6e', light: '#a8c49a', dark: '#4e7a42' },
-        terra:  { DEFAULT: '#c4622d', light: '#e8855a', dark: '#8f3e14' },
-        wheat:  { DEFAULT: '#d4a853', light: '#e8cc8a' },
+        forest: { DEFAULT: '#3d5c2e', light: '#5c7a42', dark: '#2a4020' },
+        olive:  { DEFAULT: '#8a9a6a', light: '#d8e4c0' },
       },
       fontFamily: {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
