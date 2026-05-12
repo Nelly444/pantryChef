@@ -16,14 +16,14 @@ function scrollToId(id) {
 // ── Pantry Coverage Bar ──────────────────────────────────────────
 function CoverageBar({ pct }) {
   const p = Math.min(100, Math.max(0, pct ?? 0))
-  const color = p >= 75 ? '#4e7a42' : p >= 40 ? '#d4a853' : '#c4622d'
+  const color = p >= 75 ? '#4e7a42' : p >= 40 ? '#9b8b4a' : '#8b3d20'
   return (
     <div className="mt-2">
       <div className="flex justify-between text-xs font-semibold mb-1" style={{color:'#5c3d1e'}}>
         <span>Pantry coverage</span>
         <span style={{color}}>{p}%</span>
       </div>
-      <div className="h-2.5 rounded-full bg-[#e8d5b0] overflow-hidden">
+      <div className="h-2.5 rounded-full bg-[#d8e4c0] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${p}%`, backgroundColor: color }}
@@ -60,7 +60,7 @@ function CookingMode({ steps, onClose }) {
   if (!total) return null
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[#2c1f0e]/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg rounded-3xl border-2 border-[#d4a853]/40 bg-[#faf7f2] p-6 shadow-2xl">
+      <div className="relative w-full max-w-lg rounded-3xl border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] p-6 shadow-2xl">
         <button
           type="button"
           onClick={onClose}
@@ -79,13 +79,13 @@ function CookingMode({ steps, onClose }) {
               className="h-2.5 rounded-full transition-all"
               style={{
                 width: i === step ? '2rem' : '0.625rem',
-                backgroundColor: i <= step ? '#c4622d' : '#e8d5b0',
+                backgroundColor: i <= step ? '#3d5c2e' : '#d8e4c0',
               }}
             />
           ))}
         </div>
 
-        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#c4622d]">
+        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#3d5c2e]">
           Step {step + 1} of {total}
         </p>
         <p
@@ -101,7 +101,7 @@ function CookingMode({ steps, onClose }) {
             type="button"
             disabled={step === 0}
             onClick={() => setStep(s => s - 1)}
-            className="flex-1 rounded-xl border-2 border-[#d4a853]/40 bg-transparent py-3 text-sm font-bold text-[#5c3d1e] transition hover:bg-[#f0ead8] disabled:opacity-30"
+            className="flex-1 rounded-xl border-2 border-[#8a9a6a]/40 bg-transparent py-3 text-sm font-bold text-[#5c3d1e] transition hover:bg-[#e2ead4] disabled:opacity-30"
           >
             ← Back
           </button>
@@ -110,7 +110,7 @@ function CookingMode({ steps, onClose }) {
               type="button"
               onClick={() => setStep(s => s + 1)}
               className="flex-1 rounded-xl py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-              style={{backgroundColor:'#c4622d'}}
+              style={{backgroundColor:'#3d5c2e'}}
             >
               Next →
             </button>
@@ -135,10 +135,10 @@ function FavoritesDrawer({ favs, onSelect, onClose }) {
   return (
     <div className="fixed inset-0 z-[300] flex justify-end bg-[#2c1f0e]/60 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="h-full w-full max-w-sm overflow-y-auto bg-[#faf7f2] shadow-2xl"
+        className="h-full w-full max-w-sm overflow-y-auto bg-[#f4f0e6] shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b-2 border-[#d4a853]/30 bg-[#faf7f2] px-5 py-4">
+        <div className="sticky top-0 flex items-center justify-between border-b-2 border-[#8a9a6a]/30 bg-[#f4f0e6] px-5 py-4">
           <h2 style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-xl font-bold text-[#2c1f0e]">
             ❤️ Saved Recipes
           </h2>
@@ -151,18 +151,18 @@ function FavoritesDrawer({ favs, onSelect, onClose }) {
             <p className="text-xs">Tap ♡ on any recipe card.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-[#d4a853]/20 px-4 py-2">
+          <ul className="divide-y divide-[#8a9a6a]/20 px-4 py-2">
             {favs.map(f => (
               <li key={f.id}>
                 <button
                   type="button"
                   onClick={() => { onSelect(f); onClose(); }}
-                  className="flex w-full items-center gap-3 py-3 text-left transition hover:bg-[#f0ead8]/60 rounded-xl px-2"
+                  className="flex w-full items-center gap-3 py-3 text-left transition hover:bg-[#e2ead4]/60 rounded-xl px-2"
                 >
                   {f.image ? (
                     <img src={f.image} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
                   ) : (
-                    <div className="h-14 w-14 rounded-xl bg-[#e8d5b0] shrink-0 grid place-items-center text-2xl">🍽</div>
+                    <div className="h-14 w-14 rounded-xl bg-[#d8e4c0] shrink-0 grid place-items-center text-2xl">🍽</div>
                   )}
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-[#2c1f0e] line-clamp-2">{f.title}</p>
@@ -264,10 +264,10 @@ export default function App() {
   const cookingSteps = getCookingSteps()
 
   // Input style shared
-  const inputCls = "w-full rounded-xl border-2 border-[#d4a853]/40 bg-white px-4 py-3 text-sm text-[#2c1f0e] outline-none placeholder:text-gray-400 focus:border-[#c4622d] focus:ring-2 focus:ring-[#c4622d]/15 transition"
+  const inputCls = "w-full rounded-xl border-2 border-[#8a9a6a]/40 bg-white px-4 py-3 text-sm text-[#2c1f0e] outline-none placeholder:text-gray-400 focus:border-[#3d5c2e] focus:ring-2 focus:ring-[#3d5c2e]/15 transition"
 
   return (
-    <div id="top" className="flex min-h-screen flex-col" style={{backgroundColor:'#faf7f2'}}>
+    <div id="top" className="flex min-h-screen flex-col" style={{backgroundColor:'#f4f0e6'}}>
       <TopProgress active={loading} />
       <Header onNavigate={handleNavigate} />
 
@@ -294,24 +294,24 @@ export default function App() {
         {/* Hero */}
         <section className="mb-12 flex items-start justify-between gap-4">
           <div>
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#c4622d]">From your kitchen</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-[#3d5c2e]">Your kitchen, your recipe</p>
             <h1 style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-4xl font-black italic leading-tight text-[#2c1f0e] sm:text-5xl">
-              Cook what<br className="hidden sm:block" /> you already have
+              Cook with<br className="hidden sm:block" /> what you have.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-[#5c3d1e]/80">
-              Tell us what's in your pantry and we'll find the best recipe you can make right now — no shopping required.
+              Add your pantry ingredients. We will find the best recipe you can make right now, no shopping needed.
             </p>
           </div>
           {/* Favorites button */}
           <button
             type="button"
             onClick={() => setShowFavs(true)}
-            className="shrink-0 flex flex-col items-center gap-1 rounded-2xl border-2 border-[#d4a853]/40 bg-white px-4 py-3 text-[#c4622d] shadow-sm hover:bg-[#f0ead8] transition"
+            className="shrink-0 flex flex-col items-center gap-1 rounded-2xl border-2 border-[#8a9a6a]/40 bg-white px-4 py-3 text-[#3d5c2e] shadow-sm hover:bg-[#e2ead4] transition"
           >
             <span className="text-2xl">❤️</span>
             <span className="text-xs font-bold text-[#5c3d1e]">Saved</span>
             {favs.length > 0 && (
-              <span className="rounded-full bg-[#c4622d] px-2 py-0.5 text-[10px] font-bold text-white">{favs.length}</span>
+              <span className="rounded-full bg-[#3d5c2e] px-2 py-0.5 text-[10px] font-bold text-white">{favs.length}</span>
             )}
           </button>
         </section>
@@ -320,7 +320,7 @@ export default function App() {
 
           {/* ── Left: Pantry Panel ── */}
           <div id="cook" className="lg:col-span-5">
-            <div className="rounded-3xl border-2 border-[#d4a853]/35 bg-white p-5 shadow-md sm:p-6">
+            <div className="rounded-3xl border-2 border-[#8a9a6a]/35 bg-white p-5 shadow-md sm:p-6">
 
               {/* Panel header */}
               <div className="mb-5 flex items-center justify-between gap-3">
@@ -341,15 +341,15 @@ export default function App() {
                     </button>
                   )}
                   <details className="relative">
-                    <summary className="cursor-pointer list-none rounded-xl border-2 border-[#d4a853]/40 bg-[#faf7f2] px-3 py-1.5 text-xs font-bold text-[#5c3d1e] marker:hidden outline-none hover:bg-[#f0ead8] [&::-webkit-details-marker]:hidden">
+                    <summary className="cursor-pointer list-none rounded-xl border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1.5 text-xs font-bold text-[#5c3d1e] marker:hidden outline-none hover:bg-[#e2ead4] [&::-webkit-details-marker]:hidden">
                       + Quick add
                     </summary>
-                    <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-2xl border-2 border-[#d4a853]/30 bg-white py-1 shadow-xl">
+                    <div className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-2xl border-2 border-[#8a9a6a]/30 bg-white py-1 shadow-xl">
                       {STAPLES.map(s => (
                         <button
                           key={s}
                           type="button"
-                          className="block w-full px-4 py-2.5 text-left text-sm text-[#2c1f0e] hover:bg-[#faf7f2] capitalize"
+                          className="block w-full px-4 py-2.5 text-left text-sm text-[#2c1f0e] hover:bg-[#f4f0e6] capitalize"
                           onClick={() => addIngredient(s)}
                         >
                           {s}
@@ -376,7 +376,7 @@ export default function App() {
                   type="button"
                   onClick={() => addIngredient(ingredient)}
                   className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:translate-y-px sm:w-24"
-                  style={{backgroundColor:'#c4622d'}}
+                  style={{backgroundColor:'#3d5c2e'}}
                 >
                   Add
                 </button>
@@ -402,13 +402,13 @@ export default function App() {
                   ))}
                 </div>
               ) : (
-                <p className="mt-4 rounded-xl border-2 border-dashed border-[#d4a853]/40 bg-[#faf7f2] px-4 py-3 text-sm text-[#5c3d1e]/60">
+                <p className="mt-4 rounded-xl border-2 border-dashed border-[#8a9a6a]/40 bg-[#f4f0e6] px-4 py-3 text-sm text-[#5c3d1e]/60">
                   Type or press Enter to add · or use Quick add ↗
                 </p>
               )}
 
               {/* Options */}
-              <div className="mt-6 border-t-2 border-[#d4a853]/20 pt-5">
+              <div className="mt-6 border-t-2 border-[#8a9a6a]/20 pt-5">
                 <form onSubmit={handleSuggest} className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
@@ -459,7 +459,7 @@ export default function App() {
                     className="w-full rounded-xl py-4 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                     style={{backgroundColor:'#2c1f0e'}}
                   >
-                    {loading ? '🌿 Finding your best match…' : '🍳 Suggest a recipe'}
+                    {loading ? 'Finding your best match...' : 'Suggest a recipe'}
                   </button>
                 </form>
               </div>
@@ -475,7 +475,7 @@ export default function App() {
                       key={i}
                       type="button"
                       onClick={() => { setResult(h.result); setIngredientsList(h.ingredients); requestAnimationFrame(() => scrollToId('result')) }}
-                      className="rounded-full border-2 border-[#d4a853]/30 bg-white px-3 py-1.5 text-xs font-semibold text-[#5c3d1e] shadow-sm hover:bg-[#f0ead8] transition"
+                      className="rounded-full border-2 border-[#8a9a6a]/30 bg-white px-3 py-1.5 text-xs font-semibold text-[#5c3d1e] shadow-sm hover:bg-[#e2ead4] transition"
                     >
                       {h.result?.recipe?.title?.slice(0, 26) ?? 'Recipe'}{(h.result?.recipe?.title?.length ?? 0) > 26 ? '…' : ''}
                     </button>
@@ -496,13 +496,13 @@ export default function App() {
             )}
 
             {!result && !error && (
-              <div className="rounded-3xl border-2 border-dashed border-[#d4a853]/40 bg-white/60 p-10 text-center">
+              <div className="rounded-3xl border-2 border-dashed border-[#8a9a6a]/40 bg-white/60 p-10 text-center">
                 <div className="mx-auto mb-4 text-5xl">🫙</div>
                 <p style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-xl font-bold italic text-[#2c1f0e]">
-                  Your recipe will appear here
+                  Your recipe will appear here.
                 </p>
                 <p className="mt-2 text-sm text-[#5c3d1e]/65">
-                  Add your pantry items and click <strong>Suggest a recipe</strong>.
+                  Add ingredients to your pantry, then click <strong>Suggest a recipe</strong>.
                 </p>
               </div>
             )}
@@ -510,7 +510,7 @@ export default function App() {
             {result && recipe && (
               <div className="space-y-4">
                 {/* Recipe card */}
-                <div className="overflow-hidden rounded-3xl border-2 border-[#d4a853]/35 bg-white shadow-lg">
+                <div className="overflow-hidden rounded-3xl border-2 border-[#8a9a6a]/35 bg-white shadow-lg">
                   <div className="grid md:grid-cols-5">
                     {/* Image */}
                     <div className="relative md:col-span-2">
@@ -521,7 +521,7 @@ export default function App() {
                           className="h-52 w-full object-cover md:h-full md:min-h-[260px]"
                         />
                       ) : (
-                        <div className="flex h-52 items-center justify-center text-4xl" style={{backgroundColor:'#e8d5b0'}}>🍽</div>
+                        <div className="flex h-52 items-center justify-center text-4xl" style={{backgroundColor:'#d8e4c0'}}>🍽</div>
                       )}
                       <div className="absolute left-3 top-3 rounded-full border border-white/60 px-3 py-1 text-xs font-bold text-white shadow" style={{backgroundColor:'#2c1f0e'}}>
                         {result.match_percentage}% match
@@ -554,10 +554,10 @@ export default function App() {
 
                         <div className="mt-3 flex flex-wrap gap-2">
                           {typeof recipe.readyInMinutes === 'number' && (
-                            <span className="rounded-full border-2 border-[#d4a853]/40 bg-[#faf7f2] px-3 py-1 text-xs font-bold text-[#5c3d1e]">⏱ {recipe.readyInMinutes} min</span>
+                            <span className="rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]">⏱ {recipe.readyInMinutes} min</span>
                           )}
                           {typeof recipe.servings === 'number' && (
-                            <span className="rounded-full border-2 border-[#d4a853]/40 bg-[#faf7f2] px-3 py-1 text-xs font-bold text-[#5c3d1e]">🍽 Serves {recipe.servings}</span>
+                            <span className="rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]">🍽 Serves {recipe.servings}</span>
                           )}
                           {recipe.vegetarian && <span className="rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]">🥦 Vegetarian</span>}
                           {recipe.vegan && <span className="rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]">🌱 Vegan</span>}
@@ -575,7 +575,7 @@ export default function App() {
                               ['🧈', 'Fat', Math.round(nutrition.fat ?? 0), 'g'],
                               ['🌾', 'Carbs', Math.round(nutrition.carbs ?? 0), 'g'],
                             ].map(([icon, label, val, unit]) => (
-                              <div key={label} className="rounded-xl border-2 border-[#d4a853]/25 bg-[#faf7f2] px-2 py-2 text-center">
+                              <div key={label} className="rounded-xl border-2 border-[#8a9a6a]/25 bg-[#f4f0e6] px-2 py-2 text-center">
                                 <p className="text-base">{icon}</p>
                                 <p className="text-[10px] font-bold uppercase tracking-wide text-[#5c3d1e]/60">{label}</p>
                                 <p className="font-black text-[#2c1f0e]">{val}{unit}</p>
@@ -592,24 +592,24 @@ export default function App() {
                             type="button"
                             onClick={() => setCookingMode(true)}
                             className="rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
-                            style={{backgroundColor:'#c4622d'}}
+                            style={{backgroundColor:'#3d5c2e'}}
                           >
-                            👨‍🍳 Start Cooking
+                            Start Cooking
                           </button>
                         )}
                         <button
                           type="button"
                           onClick={() => window.print()}
-                          className="rounded-xl border-2 border-[#d4a853]/40 bg-[#faf7f2] px-4 py-2.5 text-sm font-bold text-[#5c3d1e] hover:bg-[#f0ead8] transition"
+                          className="rounded-xl border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-4 py-2.5 text-sm font-bold text-[#5c3d1e] hover:bg-[#e2ead4] transition"
                         >
-                          🖨 Print
+                          Print recipe
                         </button>
                         {recipe.sourceUrl && (
                           <a
                             href={recipe.sourceUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-xl border-2 border-[#d4a853]/40 bg-[#faf7f2] px-4 py-2.5 text-sm font-bold text-[#5c3d1e] hover:bg-[#f0ead8] transition"
+                            className="rounded-xl border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-4 py-2.5 text-sm font-bold text-[#5c3d1e] hover:bg-[#e2ead4] transition"
                           >
                             View source ↗
                           </a>
@@ -625,7 +625,7 @@ export default function App() {
                     <ul className="space-y-2">
                       {result.missing_ingredients.map(m => (
                         <li key={m} className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full shrink-0" style={{backgroundColor:'#c4622d'}} />
+                          <span className="h-2 w-2 rounded-full shrink-0" style={{backgroundColor:'#3d5c2e'}} />
                           {m}
                         </li>
                       ))}
@@ -655,7 +655,7 @@ export default function App() {
                   {Array.isArray(recipe.extendedIngredients) && recipe.extendedIngredients.length > 0 ? (
                     <ul className="space-y-2">
                       {recipe.extendedIngredients.map(ing => (
-                        <li key={ing.id ?? ing.original} className="flex items-start gap-2 border-b border-[#d4a853]/20 py-2 last:border-0">
+                        <li key={ing.id ?? ing.original} className="flex items-start gap-2 border-b border-[#8a9a6a]/20 py-2 last:border-0">
                           <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{backgroundColor:'#7a9e6e'}} />
                           {ing.original || ing.name}
                         </li>
@@ -675,7 +675,7 @@ export default function App() {
                         ['Fat', Math.round(nutrition.fat ?? 0), 'g'],
                         ['Carbs', Math.round(nutrition.carbs ?? 0), 'g'],
                       ].map(([label, val, unit]) => (
-                        <div key={label} className="rounded-xl border-2 border-[#d4a853]/25 bg-[#faf7f2] px-3 py-2">
+                        <div key={label} className="rounded-xl border-2 border-[#8a9a6a]/25 bg-[#f4f0e6] px-3 py-2">
                           <dt className="text-xs font-bold uppercase tracking-wide text-[#5c3d1e]/60">{label}</dt>
                           <dd className="text-lg font-black text-[#2c1f0e]">{val}{unit}</dd>
                         </div>
