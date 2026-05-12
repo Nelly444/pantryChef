@@ -68,12 +68,22 @@ _MAX_BODY_BYTES = 10_000
 
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
+        # Check Content-Length header first (fast path).
+        # Wrap in try/except in case the header value is malformed (e.g. "Content-Length: abc").
         content_length = request.headers.get("Content-Length")
-        if content_length and int(content_length) > _MAX_BODY_BYTES:
-            return JSONResponse(
-                status_code=413,
-                content={"error": "Request body too large."},
-            )
+        if content_length:
+            try:
+                if int(content_length) > _MAX_BODY_BYTES:
+                    return JSONResponse(status_code=413, content={"error": "Request body too large."})
+            except ValueError:
+                return JSONResponse(status_code=400, content={"error": "Invalid Content-Length header."})
+
+        # Also read and cap the actual body bytes to catch chunked requests
+        # that omit Content-Length entirely.
+        body = await request.body()
+        if len(body) > _MAX_BODY_BYTES:
+            return JSONResponse(status_code=413, content={"error": "Request body too large."})
+
         return await call_next(request)
 
 app.add_middleware(SecurityHeadersMiddleware)

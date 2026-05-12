@@ -296,6 +296,25 @@ class TestSecurity:
         assert res.status_code == 200
         assert res.json()["recipe"]["title"] == "Garlic Pasta"
 
+    def test_malformed_content_length_rejected(self):
+        """A non-integer Content-Length header must return 400, not 500."""
+        res = client.post(
+            "/recipes/suggest",
+            content='{"ingredients":["garlic"]}',
+            headers={"Content-Type": "application/json", "Content-Length": "abc"},
+        )
+        assert res.status_code == 400
+
+    def test_chunked_body_too_large_rejected(self):
+        """Large body without Content-Length (chunked) must still be rejected."""
+        huge = '{"ingredients":["' + "a" * 11_000 + '"]}'
+        res = client.post(
+            "/recipes/suggest",
+            content=huge,
+            headers={"Content-Type": "application/json"},
+        )
+        assert res.status_code == 413
+
     def test_delete_method_allowed(self):
         """DELETE must be accepted (not blocked by CORS method restriction)."""
         res = client.delete("/history/999999")
