@@ -1,38 +1,44 @@
-from spoonacular import find_ingredients, get_recipe_info
+from spoonacular import find_ingredients
 
-# spoonacular best pick
-def calculate_match(pantry_items):
-    ingredients = list(pantry_items)
 
-    recipes = find_ingredients(ingredients)
+def calculate_match(pantry_items: set) -> tuple:
+    """Pick the recipe with the highest ingredient match percentage."""
+    recipes = find_ingredients(list(pantry_items))
     best = None
-    best_pct = 0
+    best_pct = 0.0
     for recipe in recipes:
-        used = recipe['usedIngredientCount']
-        missed = recipe['missedIngredientCount']
-        match_percentage = used / (used + missed) * 100
-        if match_percentage > best_pct:
-            best_pct = match_percentage
+        used = recipe.get("usedIngredientCount", 0)
+        missed = recipe.get("missedIngredientCount", 0)
+        total = used + missed
+        if total == 0:
+            continue
+        pct = used / total * 100
+        if pct > best_pct:
+            best_pct = pct
             best = recipe
     return best, best_pct
 
-# nutrients × servings
-def calculate_nutrition(recipe, servings):
-    nutrients = recipe['nutrition']['nutrients'] 
-    nutrient_map = {n["name"].lower(): n["amount"] for n in nutrients}
-    result = {
-        "calories": nutrient_map.get("calories", 0) * servings,
-        "protein": nutrient_map.get("protein", 0) * servings,
-        "fat": nutrient_map.get("fat", 0) * servings,
-        "carbs": nutrient_map.get("carbohydrates", 0) * servings
-    }
-    return result
 
-# not in pantry set
-def missing_ingredients(recipe, pantry_items):
-    recipe_ingredients = recipe['extendedIngredients']
-    missing = []
-    for ingredient in recipe_ingredients:
-        if ingredient['name'].lower() not in pantry_items:
-            missing.append(ingredient['name'])
-    return missing
+def calculate_nutrition(recipe: dict, servings: int) -> dict:
+    """
+    Scale nutrients by the requested serving count.
+    Returns zeros if the recipe has no nutrition data rather than crashing.
+    """
+    nutrients = recipe.get("nutrition", {}).get("nutrients", [])
+    nutrient_map = {n["name"].lower(): n["amount"] for n in nutrients}
+    return {
+        "calories": nutrient_map.get("calories", 0) * servings,
+        "protein":  nutrient_map.get("protein", 0) * servings,
+        "fat":      nutrient_map.get("fat", 0) * servings,
+        "carbs":    nutrient_map.get("carbohydrates", 0) * servings,
+    }
+
+
+def missing_ingredients(recipe: dict, pantry_items: set) -> list:
+    """Return ingredient names that are in the recipe but not in the pantry."""
+    extended = recipe.get("extendedIngredients", [])
+    return [
+        ing["name"]
+        for ing in extended
+        if ing.get("name", "").lower() not in pantry_items
+    ]

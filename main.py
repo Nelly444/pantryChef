@@ -1,6 +1,6 @@
 import os
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
@@ -13,6 +13,10 @@ from datetime import datetime, timezone
 
 from recipe import calculate_match, calculate_nutrition, missing_ingredients
 from spoonacular import get_recipe_info, SpoonacularError
+
+# Fail fast if the API key is missing — better than a confusing 401 on first request
+if not os.getenv("SPOONACULAR_API_KEY"):
+    raise RuntimeError("SPOONACULAR_API_KEY is not set. Add it to your .env file.")
 
 # ── Rate limiter ──────────────────────────────────────────────────
 # get_remote_address pulls the client's IP from the request.
@@ -133,13 +137,13 @@ def suggest_recipes(request: Request, body: RecipeRequest):
 
 @app.get("/history")
 @limiter.limit("30/minute")
-def get_history(request: Request, limit: int = 20):
-    """Returns the last N searches, newest first."""
+def get_history(request: Request, limit: int = Query(default=20, ge=1, le=50)):
+    """Returns the last N searches, newest first. Max 50."""
     with Session(engine) as session:
         rows = (
             session.query(SearchHistory)
             .order_by(SearchHistory.searched_at.desc())
-            .limit(min(limit, 50))  # cap at 50 even if caller asks for more
+            .limit(limit)
             .all()
         )
         return [
