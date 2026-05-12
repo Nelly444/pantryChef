@@ -6,6 +6,7 @@ import { HeartFilled, HeartOutline, Bowl, Plate, Clock, Users, Sprout, Leaf, Fla
 import TopProgress from './components/TopProgress.jsx'
 import { suggestRecipe } from './lib/api.js'
 import { stripHtml, cleanSummary } from './lib/text.js'
+import { validateIngredient, validateDietTerm, isSafeUrl } from './lib/validate.js'
 
 const STAPLES = ['eggs', 'onion', 'garlic', 'rice', 'chicken breast', 'tomato', 'olive oil', 'pasta']
 
@@ -198,7 +199,8 @@ export default function App() {
 
   const addIngredient = useCallback((raw) => {
     const next = raw.trim()
-    if (!next) { setInputHint('Enter an ingredient.'); return }
+    const validationError = validateIngredient(next)
+    if (validationError) { setInputHint(validationError); return }
     const lower = next.toLowerCase()
     if (ingredientsList.some(x => x.toLowerCase() === lower)) { setInputHint('Already in list.'); return }
     setIngredientsList(prev => [...prev, next])
@@ -212,7 +214,10 @@ export default function App() {
 
   const parseDietary = () => {
     const parts = dietaryText.split(',').map(s => s.trim()).filter(Boolean)
-    return parts.length ? parts : null
+    // Silently drop terms that fail validation rather than blocking the whole request.
+    // The backend enforces the same rules as a hard gate.
+    const valid = parts.filter(term => validateDietTerm(term) === null)
+    return valid.length ? valid : null
   }
 
   const handleSuggest = async (e) => {
@@ -367,6 +372,7 @@ export default function App() {
                   type="text"
                   autoComplete="off"
                   placeholder="e.g. Greek yogurt"
+                  maxLength={60}
                   value={ingredient}
                   onChange={e => { setIngredient(e.target.value); if (inputHint) setInputHint('') }}
                   onKeyDown={handleKeyDown}
@@ -417,8 +423,12 @@ export default function App() {
                         id="servings"
                         type="number"
                         min={1}
+                        max={20}
                         value={serving}
-                        onChange={e => setServing(e.target.value)}
+                        onChange={e => {
+                          const v = parseInt(e.target.value, 10)
+                          setServing(isNaN(v) ? 1 : Math.min(20, Math.max(1, v)))
+                        }}
                         className={inputCls}
                       />
                     </div>
@@ -446,6 +456,7 @@ export default function App() {
                       id="dietary"
                       type="text"
                       placeholder="e.g. vegetarian, gluten free"
+                      maxLength={510}
                       value={dietaryText}
                       onChange={e => setDietaryText(e.target.value)}
                       className={inputCls}
@@ -604,11 +615,11 @@ export default function App() {
                         >
                           Print recipe
                         </button>
-                        {recipe.sourceUrl && (
+                        {isSafeUrl(recipe.sourceUrl) && (
                           <a
                             href={recipe.sourceUrl}
                             target="_blank"
-                            rel="noreferrer"
+                            rel="noreferrer noopener"
                             className="rounded-xl border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-4 py-2.5 text-sm font-bold text-[#5c3d1e] hover:bg-[#e2ead4] transition"
                           >
                             View source ↗

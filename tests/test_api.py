@@ -12,11 +12,23 @@ for the duration of each test.
 import os
 os.environ["SPOONACULAR_API_KEY"] = "test-key"  # prevent startup crash
 
+import pytest
 from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
-from main import app
+from main import app, limiter
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Clear slowapi's in-memory counters before each test.
+
+    Without this, the 10-per-minute limit on /recipes/suggest fires mid-suite
+    because all tests share the same 'testclient' remote address.
+    """
+    limiter._storage.reset()
+    yield
 
 # ── Fake data ────────────────────────────────────────────────────────────────
 
@@ -105,7 +117,8 @@ class TestSuggestEndpoint:
 
     def test_no_matching_recipe_returns_404(self):
         with patch("main.calculate_match", return_value=(None, 0)):
-            res = client.post("/recipes/suggest", json={"ingredients": ["xyz_ingredient"]})
+            # "xyzzygarble" is valid format but will match nothing — no underscore
+            res = client.post("/recipes/suggest", json={"ingredients": ["xyzzygarble"]})
         assert res.status_code == 404
 
     def test_spoonacular_error_returns_502(self):
@@ -319,6 +332,80 @@ class TestSecurity:
         """DELETE must be accepted (not blocked by CORS method restriction)."""
         res = client.delete("/history/999999")
         assert res.status_code == 404  # 404 not found, not 405 method not allowed
+
+
+# ── Injection & allowlist tests ───────────────────────────────────────────────
+
+class TestInjectionRejection:
+
+    def test_script_tag_in_ingredient_rejected(self):
+        """HTML/script tags in ingredient names must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["<script>alert(1)</script>"]})
+        assert res.status_code == 422
+
+    def test_sql_injection_in_ingredient_rejected(self):
+        """SQL metacharacters in ingredient names must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["garlic'; DROP TABLE--"]})
+        assert res.status_code == 422
+
+    def test_command_injection_in_ingredient_rejected(self):
+        """Shell metacharacters in ingredient names must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["garlic | rm -rf /"]})
+        assert res.status_code == 422
+
+    def test_backtick_injection_in_ingredient_rejected(self):
+        """Backtick command substitution in ingredient names must be rejected."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["`whoami`"]})
+        assert res.status_code == 422
+
+    def test_dollar_sign_injection_in_ingredient_rejected(self):
+        """Dollar-sign variable expansion in ingredient names must be rejected."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["$(id)"]})
+        assert res.status_code == 422
+
+    def test_angle_bracket_in_dietary_rejected(self):
+        """HTML tags in dietary restrictions must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "dietary_restrictions": ["<script>xss</script>"],
+        })
+        assert res.status_code == 422
+
+    def test_semicolon_in_dietary_rejected(self):
+        """SQL semicolons in dietary restrictions must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "dietary_restrictions": ["vegan; DROP TABLE search_history"],
+        })
+        assert res.status_code == 422
+
+    def test_invalid_meal_type_rejected(self):
+        """A meal type not in the allowed list must be rejected with 422."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "meal": "fourth_meal",
+        })
+        assert res.status_code == 422
+
+    def test_valid_meal_type_accepted(self):
+        """All known meal types must be accepted."""
+        for meal in ["breakfast", "brunch", "lunch", "dinner", "snack"]:
+            with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
+                 patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+                res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "meal": meal})
+            assert res.status_code == 200, f"Expected 200 for meal='{meal}', got {res.status_code}"
+
+    def test_accented_ingredient_accepted(self):
+        """Ingredient names with accented characters must be accepted."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            res = client.post("/recipes/suggest", json={"ingredients": ["jalapeño"]})
+        assert res.status_code == 200
+
+    def test_underscore_in_ingredient_rejected(self):
+        """Underscores are not valid food characters and must be rejected."""
+        res = client.post("/recipes/suggest", json={"ingredients": ["xyz_ingredient"]})
+        assert res.status_code == 422
 
 
 # ── recipe.py unit tests ──────────────────────────────────────────────────────

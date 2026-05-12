@@ -1,5 +1,7 @@
 import os
+import re
 import logging
+from typing import Literal
 
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -106,12 +108,24 @@ app.add_middleware(
 )
 
 # ── Input validation ──────────────────────────────────────────────────────────
+# Positive character allowlists — only chars that appear in real food names.
+# Letters (a-z, A-Z, accented À-ÿ), digits, space, and safe punctuation.
+# This blocks angle brackets, semicolons, pipes, backticks, dollar signs, etc.
+# that appear in script-injection, SQL-injection, and command-injection payloads.
+_INGREDIENT_RE = re.compile(r"^[a-zA-Z\xc0-\xff0-9][a-zA-Z\xc0-\xff0-9 '\-.,()/%]*$")
+_DIET_RE       = re.compile(r"^[a-zA-Z\xc0-\xff][a-zA-Z\xc0-\xff \-]*$")
+
+_VALID_MEALS = Literal[
+    'breakfast', 'brunch', 'lunch', 'dinner',
+    'snack', 'appetizer', 'dessert', 'soup', 'salad',
+]
+
+
 class RecipeRequest(BaseModel):
     ingredients: list[str] = Field(min_length=1, max_length=20)
-    # dietary_restrictions: max 10 items, each max 50 chars
     dietary_restrictions: list[str] | None = Field(default=None, max_length=10)
-    # meal: max 50 chars to prevent oversized strings
-    meal: str | None = Field(default=None, max_length=50)
+    # Literal enum — rejects any string not in the known list.
+    meal: _VALID_MEALS | None = None
     serving: int = Field(default=1, ge=1, le=20)
 
     @field_validator("ingredients")
@@ -122,7 +136,12 @@ class RecipeRequest(BaseModel):
             raise ValueError("Ingredients list cannot be empty.")
         for item in cleaned:
             if len(item) > 60:
-                raise ValueError(f"Ingredient name too long: '{item[:30]}...'")
+                raise ValueError(f"Ingredient '{item[:30]}' is too long (max 60 characters).")
+            if not _INGREDIENT_RE.match(item):
+                raise ValueError(
+                    f"Ingredient '{item[:30]}' contains invalid characters. "
+                    "Only letters, digits, spaces, and basic punctuation are allowed."
+                )
         return cleaned
 
     @field_validator("dietary_restrictions")
@@ -130,10 +149,20 @@ class RecipeRequest(BaseModel):
     def clean_dietary(cls, items):
         if items is None:
             return items
-        for item in items:
-            if len(item.strip()) > 50:
-                raise ValueError("Dietary restriction string too long.")
-        return [i.strip() for i in items if i.strip()]
+        cleaned = []
+        for raw in items:
+            item = raw.strip()
+            if not item:
+                continue
+            if len(item) > 50:
+                raise ValueError("Dietary restriction string too long (max 50 characters).")
+            if not _DIET_RE.match(item):
+                raise ValueError(
+                    f"Dietary restriction '{item[:30]}' contains invalid characters. "
+                    "Only letters, spaces, and hyphens are allowed."
+                )
+            cleaned.append(item)
+        return cleaned
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
