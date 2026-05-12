@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import FastAPI, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,46 +10,77 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
 from sqlalchemy.orm import declarative_base, Session
+from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime, timezone
 
 from recipe import calculate_match, calculate_nutrition, missing_ingredients
 from spoonacular import get_recipe_info, SpoonacularError
 
+logger = logging.getLogger(__name__)
+
 # Fail fast if the API key is missing — better than a confusing 401 on first request
 if not os.getenv("SPOONACULAR_API_KEY"):
     raise RuntimeError("SPOONACULAR_API_KEY is not set. Add it to your .env file.")
 
-# ── Rate limiter ──────────────────────────────────────────────────
-# get_remote_address pulls the client's IP from the request.
-# Every endpoint we want to protect gets a @limiter.limit() decorator.
+# ── Rate limiter ──────────────────────────────────────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
 
-# ── Database ──────────────────────────────────────────────────────
-# SQLite stores data in a single file (pantry.db) in the project folder.
-# No separate database server needed — perfect for a portfolio project.
-# SQLAlchemy is the ORM (Object Relational Mapper) — it lets us work with
-# the database using Python classes instead of raw SQL strings.
-engine = create_engine("sqlite:///pantry.db", connect_args={"check_same_thread": False})
+# ── Database ──────────────────────────────────────────────────────────────────
+# Use an absolute path so the DB file is always next to main.py,
+# regardless of what directory the server is started from.
+_DB_PATH = os.path.join(os.path.dirname(__file__), "pantry.db")
+engine = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
 Base = declarative_base()
 
 class SearchHistory(Base):
-    """One row per recipe search. Stored forever until the user deletes it."""
     __tablename__ = "search_history"
-
-    id        = Column(Integer, primary_key=True, index=True)
-    ingredients  = Column(JSON)          # list of strings
-    recipe_title = Column(String)
+    id           = Column(Integer, primary_key=True, index=True)
+    ingredients  = Column(JSON)
+    recipe_title = Column(String(300))
     recipe_id    = Column(Integer)
     match_pct    = Column(Float)
     searched_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-Base.metadata.create_all(engine)  # creates pantry.db and the table if they don't exist yet
+Base.metadata.create_all(engine)
 
-# ── App setup ─────────────────────────────────────────────────────
+# ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="PantryChef API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# ── Security headers middleware ───────────────────────────────────────────────
+# These headers tell browsers how to handle the response safely.
+# X-Content-Type-Options: prevents MIME-sniffing attacks
+# X-Frame-Options: prevents clickjacking (loading your app in an iframe)
+# Referrer-Policy: controls how much URL info is sent to third parties
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+# ── Body size limit middleware ────────────────────────────────────────────────
+# Without this, an attacker can send a multi-MB payload.
+# 10KB is generous for our API — a valid request is ~200 bytes.
+_MAX_BODY_BYTES = 10_000
+
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        content_length = request.headers.get("Content-Length")
+        if content_length and int(content_length) > _MAX_BODY_BYTES:
+            return JSONResponse(
+                status_code=413,
+                content={"error": "Request body too large."},
+            )
+        return await call_next(request)
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(BodySizeLimitMiddleware)
+
+# CORS — restrict to only the methods and headers the app actually uses.
+# allow_credentials is False because we use no cookies or HTTP auth.
 _default_origins = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000"
 _cors_origins = [
     o.strip()
@@ -58,19 +90,18 @@ _cors_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Content-Type"],
 )
 
-# ── Input validation ──────────────────────────────────────────────
-# Pydantic models are how FastAPI validates incoming JSON.
-# Field() lets us add constraints: min/max length, min/max value.
-# @field_validator runs custom logic before the data is accepted.
+# ── Input validation ──────────────────────────────────────────────────────────
 class RecipeRequest(BaseModel):
     ingredients: list[str] = Field(min_length=1, max_length=20)
-    dietary_restrictions: list[str] | None = None
-    meal: str | None = None
+    # dietary_restrictions: max 10 items, each max 50 chars
+    dietary_restrictions: list[str] | None = Field(default=None, max_length=10)
+    # meal: max 50 chars to prevent oversized strings
+    meal: str | None = Field(default=None, max_length=50)
     serving: int = Field(default=1, ge=1, le=20)
 
     @field_validator("ingredients")
@@ -84,8 +115,18 @@ class RecipeRequest(BaseModel):
                 raise ValueError(f"Ingredient name too long: '{item[:30]}...'")
         return cleaned
 
+    @field_validator("dietary_restrictions")
+    @classmethod
+    def clean_dietary(cls, items):
+        if items is None:
+            return items
+        for item in items:
+            if len(item.strip()) > 50:
+                raise ValueError("Dietary restriction string too long.")
+        return [i.strip() for i in items if i.strip()]
 
-# ── Endpoints ─────────────────────────────────────────────────────
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/")
 def home():
@@ -93,12 +134,8 @@ def home():
 
 
 @app.post("/recipes/suggest")
-@limiter.limit("10/minute")  # max 10 searches per minute per IP
+@limiter.limit("10/minute")
 def suggest_recipes(request: Request, body: RecipeRequest):
-    """
-    Main endpoint. Finds the best recipe from the user's pantry ingredients.
-    Rate limited to protect the Spoonacular API quota.
-    """
     pantry_items = set(item.strip().lower() for item in body.ingredients)
 
     try:
@@ -121,15 +158,19 @@ def suggest_recipes(request: Request, body: RecipeRequest):
     nutrition_info = calculate_nutrition(recipe_info, body.serving)
     missing = missing_ingredients(recipe_info, pantry_items)
 
-    # Save to database
-    with Session(engine) as session:
-        session.add(SearchHistory(
-            ingredients=list(body.ingredients),
-            recipe_title=recipe_info.get("title"),
-            recipe_id=recipe_info.get("id"),
-            match_pct=round(best_pct, 2),
-        ))
-        session.commit()
+    # History write is best-effort — a DB failure should not fail the main response.
+    # We log the error so it's visible in server logs but the user still gets their recipe.
+    try:
+        with Session(engine) as session:
+            session.add(SearchHistory(
+                ingredients=list(body.ingredients),
+                recipe_title=recipe_info.get("title"),
+                recipe_id=recipe_info.get("id"),
+                match_pct=round(best_pct, 2),
+            ))
+            session.commit()
+    except Exception as e:
+        logger.error("Failed to save search history: %s", e)
 
     return {
         "recipe": recipe_info,
@@ -142,7 +183,6 @@ def suggest_recipes(request: Request, body: RecipeRequest):
 @app.get("/history")
 @limiter.limit("30/minute")
 def get_history(request: Request, limit: int = Query(default=20, ge=1, le=50)):
-    """Returns the last N searches, newest first. Max 50."""
     with Session(engine) as session:
         rows = (
             session.query(SearchHistory)
@@ -166,7 +206,6 @@ def get_history(request: Request, limit: int = Query(default=20, ge=1, le=50)):
 @app.delete("/history/{entry_id}")
 @limiter.limit("30/minute")
 def delete_history_entry(request: Request, entry_id: int):
-    """Deletes a single history entry by its database ID."""
     with Session(engine) as session:
         row = session.get(SearchHistory, entry_id)
         if not row:

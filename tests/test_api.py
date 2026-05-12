@@ -235,6 +235,73 @@ class TestDeleteHistory:
         assert res.status_code == 422
 
 
+# ── Security tests ───────────────────────────────────────────────────────────
+
+class TestSecurity:
+
+    def test_security_headers_present(self):
+        """Every response must include the three core security headers."""
+        res = client.get("/")
+        assert res.headers.get("X-Content-Type-Options") == "nosniff"
+        assert res.headers.get("X-Frame-Options") == "DENY"
+        assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+
+    def test_security_headers_on_post(self):
+        """Security headers must appear on POST responses too."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
+        assert res.headers.get("X-Content-Type-Options") == "nosniff"
+
+    def test_body_too_large_rejected(self):
+        """Payloads over 10KB must be rejected with 413."""
+        huge_body = '{"ingredients":["' + "a" * 11_000 + '"]}'
+        res = client.post(
+            "/recipes/suggest",
+            content=huge_body,
+            headers={"Content-Type": "application/json", "Content-Length": str(len(huge_body))},
+        )
+        assert res.status_code == 413
+
+    def test_dietary_restrictions_list_too_long(self):
+        """More than 10 dietary restrictions must be rejected."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "dietary_restrictions": [f"diet{i}" for i in range(11)],
+        })
+        assert res.status_code == 422
+
+    def test_dietary_restriction_string_too_long(self):
+        """A dietary restriction string over 50 chars must be rejected."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "dietary_restrictions": ["v" * 51],
+        })
+        assert res.status_code == 422
+
+    def test_meal_string_too_long(self):
+        """A meal string over 50 chars must be rejected."""
+        res = client.post("/recipes/suggest", json={
+            "ingredients": ["garlic"],
+            "meal": "d" * 51,
+        })
+        assert res.status_code == 422
+
+    def test_db_write_failure_does_not_fail_response(self):
+        """A database error during history write must not return 500 to the user."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE), \
+             patch("main.Session", side_effect=Exception("DB is down")):
+            res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
+        assert res.status_code == 200
+        assert res.json()["recipe"]["title"] == "Garlic Pasta"
+
+    def test_delete_method_allowed(self):
+        """DELETE must be accepted (not blocked by CORS method restriction)."""
+        res = client.delete("/history/999999")
+        assert res.status_code == 404  # 404 not found, not 405 method not allowed
+
+
 # ── recipe.py unit tests ──────────────────────────────────────────────────────
 
 class TestRecipeLogic:
