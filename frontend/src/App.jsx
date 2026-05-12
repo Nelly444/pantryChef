@@ -16,7 +16,9 @@ const STAPLES = ['eggs', 'onion', 'garlic', 'rice', 'chicken breast', 'tomato', 
 
 // Shared input style — defined once, used across all form controls.
 // Uses design tokens from tailwind.config.js (olive, bark, forest).
-const inputCls = 'w-full rounded-xl border-2 border-olive/40 bg-white px-4 py-3 text-sm text-bark outline-none placeholder:text-gray-400 focus:border-forest focus:ring-2 focus:ring-forest/15 transition'
+// focus-visible: ensures the ring only appears for keyboard navigation,
+// not when clicking with a mouse — the correct accessible behaviour per Tailwind docs.
+const inputCls = 'w-full rounded-xl border-2 border-olive/40 bg-white px-4 py-3 text-sm text-bark outline-none placeholder:text-gray-400 focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/20 transition'
 
 function scrollToId(id) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -126,7 +128,7 @@ export default function App() {
         <section className="mb-12 flex items-start justify-between gap-4">
           <div>
             <p className="mb-2 text-xs font-bold uppercase tracking-widest text-forest">
-              Your kitchen, your recipe
+              Powered by your pantry
             </p>
             <h1 className="font-display text-4xl font-black italic leading-tight text-bark sm:text-5xl">
               Cook with<br className="hidden sm:block" /> what you have.
@@ -156,7 +158,10 @@ export default function App() {
 
           {/* ── Left: Pantry Panel ── */}
           <div id="cook" className="lg:col-span-5">
-            <div className="rounded-3xl border-2 border-olive/35 bg-white p-5 shadow-md sm:p-6">
+            <div className="rounded-3xl border-2 border-olive/35 bg-white shadow-md overflow-hidden">
+              {/* Accent bar — standard professional card pattern to mark the primary action panel */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-forest via-sage to-olive-light" />
+              <div className="p-5 sm:p-6">
 
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
@@ -302,13 +307,14 @@ export default function App() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-xl bg-bark py-4 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="w-full rounded-xl bg-bark py-4 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {loading ? 'Finding your best match...' : 'Suggest a recipe'}
                   </button>
                 </form>
               </div>
-            </div>
+            </div>{/* closes p-5 sm:p-6 */}
+            </div>{/* closes card */}
 
             {/* Recent searches — key uses timestamp to avoid index-as-key anti-pattern */}
             {history.length > 1 && (
@@ -361,8 +367,8 @@ export default function App() {
 
             {result && recipe && (
               <div className="space-y-4">
-                {/* Recipe card */}
-                <div className="overflow-hidden rounded-3xl border-2 border-olive/35 bg-white shadow-lg">
+                {/* Recipe card — group enables group-hover: on children per Tailwind docs */}
+                <div className="group overflow-hidden rounded-3xl border-2 border-olive/35 bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl">
                   <div className="grid md:grid-cols-5">
 
                     {/* Image */}
