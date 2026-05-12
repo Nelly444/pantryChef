@@ -11,6 +11,7 @@ import { suggestRecipe } from './lib/api.js'
 import { stripHtml, cleanSummary } from './lib/text.js'
 import { validateIngredient, validateDietTerm, isSafeUrl } from './lib/validate.js'
 import { useFavorites } from './hooks/useFavorites.js'
+import ShineBorder from './components/ui/ShineBorder.jsx'
 
 const STAPLES = ['eggs', 'onion', 'garlic', 'rice', 'chicken breast', 'tomato', 'olive oil', 'pasta']
 
@@ -131,7 +132,7 @@ export default function App() {
               Powered by your pantry
             </p>
             <h1 className="font-display text-4xl font-black italic leading-tight text-bark sm:text-5xl">
-              Cook with<br className="hidden sm:block" /> what you have.
+              Your pantry<br className="hidden sm:block" /> has a recipe.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-bark-light/80">
               Add your pantry ingredients. We will find the best recipe you can make right now, no shopping needed.
@@ -158,9 +159,13 @@ export default function App() {
 
           {/* ── Left: Pantry Panel ── */}
           <div id="cook" className="lg:col-span-5">
-            <div className="rounded-3xl border-2 border-olive/35 bg-white shadow-md overflow-hidden">
-              {/* Accent bar — standard professional card pattern to mark the primary action panel */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-forest via-sage to-olive-light" />
+            <ShineBorder
+              borderRadius={24}
+              borderWidth={2}
+              duration={8}
+              color={['#3d5c2e', '#7a9e6e', '#d8e4c0', '#8a9a6a']}
+              className="shadow-md"
+            >
               <div className="p-5 sm:p-6">
 
               <div className="mb-5 flex items-center justify-between gap-3">
@@ -314,7 +319,7 @@ export default function App() {
                 </form>
               </div>
             </div>{/* closes p-5 sm:p-6 */}
-            </div>{/* closes card */}
+            </ShineBorder>
 
             {/* Recent searches — key uses timestamp to avoid index-as-key anti-pattern */}
             {history.length > 1 && (

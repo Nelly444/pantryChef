@@ -16,6 +16,16 @@ module.exports = {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
         body:    ['Lato', 'sans-serif'],
       },
+      animation: {
+        'shine-pulse': 'shine-pulse 8s infinite linear',
+      },
+      keyframes: {
+        'shine-pulse': {
+          '0%':  { 'background-position': '0% 0%' },
+          '50%': { 'background-position': '100% 100%' },
+          'to':  { 'background-position': '0% 0%' },
+        },
+      },
     },
   },
   plugins: [],
