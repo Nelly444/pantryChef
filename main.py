@@ -182,6 +182,7 @@ def suggest_recipes(request: Request, body: RecipeRequest):
             pantry_items,
             dietary_restrictions=body.dietary_restrictions,
             meal_type=body.meal,
+            servings=body.serving,
         )
     except SpoonacularError as e:
         return JSONResponse(status_code=502, content={"error": str(e)})

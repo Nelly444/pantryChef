@@ -5,16 +5,18 @@ def calculate_match(
     pantry_items: set,
     dietary_restrictions: list[str] | None = None,
     meal_type: str | None = None,
+    servings: int | None = None,
 ) -> tuple:
     """
     Find the recipe with the highest ingredient match percentage.
-    Passes dietary_restrictions and meal_type to Spoonacular so results
-    are already filtered — no post-processing needed.
+    Passes dietary_restrictions, meal_type, and servings to Spoonacular
+    so results are already filtered — no post-processing needed.
     """
     recipes = find_recipes(
         list(pantry_items),
         dietary_restrictions=dietary_restrictions,
         meal_type=meal_type,
+        servings=servings,
     )
     best = None
     best_pct = 0.0

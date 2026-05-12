@@ -75,6 +75,7 @@ def find_recipes(
     ingredients: list[str],
     dietary_restrictions: list[str] | None = None,
     meal_type: str | None = None,
+    servings: int | None = None,
 ) -> list[dict]:
     """
     Search for recipes using Spoonacular's complexSearch endpoint.
@@ -97,6 +98,13 @@ def find_recipes(
     meal = _resolve_meal_type(meal_type)
     if meal:
         params["type"] = meal
+
+    if servings is not None:
+        # Ask Spoonacular to only return recipes whose native serving count
+        # is within ±1-2 of what the user requested, so a "4 servings" search
+        # doesn't surface a recipe that feeds 12.
+        params["minServings"] = max(1, servings - 1)
+        params["maxServings"] = servings + 2
 
     try:
         response = requests.get(

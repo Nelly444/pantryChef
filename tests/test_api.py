@@ -176,6 +176,17 @@ class TestDietaryFiltering:
         _, kwargs = mock_match.call_args
         assert kwargs.get("meal_type") == "dinner"
 
+    def test_serving_count_passed_to_calculate_match(self):
+        """Serving count must be forwarded to calculate_match so it influences recipe selection."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "serving": 4,
+            })
+        _, kwargs = mock_match.call_args
+        assert kwargs.get("servings") == 4
+
     def test_diet_normalisation_vegetarian(self):
         from spoonacular import _resolve_diet
         assert _resolve_diet(["vegetarian"]) == "vegetarian"
