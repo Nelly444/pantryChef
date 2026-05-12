@@ -9,15 +9,11 @@ never make real API calls (which would burn your quota and require network).
 for the duration of each test.
 """
 
-import pytest
-from unittest.mock import patch
-from fastapi.testclient import TestClient
-
-# TestClient lets us make HTTP requests to the FastAPI app without
-# running a real server. It's synchronous, so tests are simple functions.
 import os
 os.environ["SPOONACULAR_API_KEY"] = "test-key"  # prevent startup crash
 
+from unittest.mock import patch, MagicMock
+from fastapi.testclient import TestClient
 from main import app
 
 client = TestClient(app)
@@ -37,7 +33,7 @@ FAKE_RECIPE = {
     "image": "https://example.com/pasta.jpg",
     "readyInMinutes": 20,
     "servings": 2,
-    "vegetarian": False,
+    "vegetarian": True,
     "vegan": False,
     "summary": "A simple pasta dish.",
     "sourceUrl": "https://example.com",
@@ -59,7 +55,7 @@ FAKE_RECIPE = {
 }
 
 
-# ── /recipes/suggest ─────────────────────────────────────────────────────────
+# ── /recipes/suggest ──────────────────────────────────────────────────────────
 
 class TestSuggestEndpoint:
 
@@ -87,8 +83,7 @@ class TestSuggestEndpoint:
 
     def test_ingredient_too_long_rejected(self):
         """Ingredient names over 60 characters must be rejected."""
-        long_name = "a" * 61
-        res = client.post("/recipes/suggest", json={"ingredients": [long_name]})
+        res = client.post("/recipes/suggest", json={"ingredients": ["a" * 61]})
         assert res.status_code == 422
 
     def test_whitespace_only_ingredients_rejected(self):
@@ -97,28 +92,23 @@ class TestSuggestEndpoint:
         assert res.status_code == 422
 
     def test_serving_zero_rejected(self):
-        """Serving count of 0 must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": 0})
         assert res.status_code == 422
 
     def test_serving_over_limit_rejected(self):
-        """Serving count above 20 must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": 21})
         assert res.status_code == 422
 
     def test_negative_serving_rejected(self):
-        """Negative serving count must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": -1})
         assert res.status_code == 422
 
     def test_no_matching_recipe_returns_404(self):
-        """When Spoonacular finds nothing, return 404."""
         with patch("main.calculate_match", return_value=(None, 0)):
             res = client.post("/recipes/suggest", json={"ingredients": ["xyz_ingredient"]})
         assert res.status_code == 404
 
     def test_spoonacular_error_returns_502(self):
-        """When Spoonacular is down, return 502 not 500."""
         from spoonacular import SpoonacularError
         with patch("main.calculate_match", side_effect=SpoonacularError("Quota exceeded")):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
@@ -131,22 +121,83 @@ class TestSuggestEndpoint:
              patch("main.get_recipe_info", return_value=FAKE_RECIPE):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": 2})
         assert res.status_code == 200
-        # FAKE_RECIPE has 400 calories per serving, so 2 servings = 800
-        assert res.json()["nutrition"]["calories"] == 800
+        assert res.json()["nutrition"]["calories"] == 800  # 400 * 2
 
     def test_recipe_with_no_nutrition_data(self):
         """Recipe missing nutrition key must return zeros, not crash."""
-        recipe_no_nutrition = {**FAKE_RECIPE, "nutrition": {}}
+        no_nutrition = {**FAKE_RECIPE, "nutrition": {}}
         with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=recipe_no_nutrition):
+             patch("main.get_recipe_info", return_value=no_nutrition):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.status_code == 200
         assert res.json()["nutrition"]["calories"] == 0
 
     def test_missing_ingredients_field_required(self):
-        """Omitting the ingredients field entirely must be rejected."""
         res = client.post("/recipes/suggest", json={"serving": 2})
         assert res.status_code == 422
+
+
+# ── Dietary restrictions & meal type ─────────────────────────────────────────
+
+class TestDietaryFiltering:
+
+    def test_dietary_restrictions_passed_to_calculate_match(self):
+        """Dietary restrictions must be forwarded to calculate_match."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "dietary_restrictions": ["vegetarian"],
+            })
+        _, kwargs = mock_match.call_args
+        assert kwargs.get("dietary_restrictions") == ["vegetarian"]
+
+    def test_meal_type_passed_to_calculate_match(self):
+        """Meal type must be forwarded to calculate_match."""
+        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
+             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "meal": "dinner",
+            })
+        _, kwargs = mock_match.call_args
+        assert kwargs.get("meal_type") == "dinner"
+
+    def test_diet_normalisation_vegetarian(self):
+        from spoonacular import _resolve_diet
+        assert _resolve_diet(["vegetarian"]) == "vegetarian"
+
+    def test_diet_normalisation_alias_keto(self):
+        from spoonacular import _resolve_diet
+        assert _resolve_diet(["keto"]) == "ketogenic"
+
+    def test_diet_normalisation_alias_gluten_free(self):
+        from spoonacular import _resolve_diet
+        assert _resolve_diet(["gluten-free"]) == "gluten free"
+
+    def test_diet_normalisation_unknown_term_returns_none(self):
+        from spoonacular import _resolve_diet
+        assert _resolve_diet(["pescatarian_typo"]) is None
+
+    def test_diet_normalisation_empty_returns_none(self):
+        from spoonacular import _resolve_diet
+        assert _resolve_diet([]) is None
+
+    def test_meal_type_dinner_maps_to_main_course(self):
+        from spoonacular import _resolve_meal_type
+        assert _resolve_meal_type("dinner") == "main course"
+
+    def test_meal_type_lunch_maps_to_main_course(self):
+        from spoonacular import _resolve_meal_type
+        assert _resolve_meal_type("lunch") == "main course"
+
+    def test_meal_type_brunch_maps_to_breakfast(self):
+        from spoonacular import _resolve_meal_type
+        assert _resolve_meal_type("brunch") == "breakfast"
+
+    def test_meal_type_unknown_returns_none(self):
+        from spoonacular import _resolve_meal_type
+        assert _resolve_meal_type("fourth meal") is None
 
 
 # ── /history ──────────────────────────────────────────────────────────────────
@@ -154,23 +205,19 @@ class TestSuggestEndpoint:
 class TestHistoryEndpoint:
 
     def test_history_returns_list(self):
-        """GET /history always returns a list."""
         res = client.get("/history")
         assert res.status_code == 200
         assert isinstance(res.json(), list)
 
     def test_history_limit_negative_rejected(self):
-        """Negative limit must be rejected."""
         res = client.get("/history?limit=-1")
         assert res.status_code == 422
 
     def test_history_limit_zero_rejected(self):
-        """Zero limit must be rejected."""
         res = client.get("/history?limit=0")
         assert res.status_code == 422
 
     def test_history_limit_over_cap_rejected(self):
-        """Limit above 50 must be rejected."""
         res = client.get("/history?limit=51")
         assert res.status_code == 422
 
@@ -180,12 +227,10 @@ class TestHistoryEndpoint:
 class TestDeleteHistory:
 
     def test_delete_nonexistent_entry_returns_404(self):
-        """Deleting an ID that doesn't exist must return 404."""
         res = client.delete("/history/999999")
         assert res.status_code == 404
 
     def test_delete_with_string_id_rejected(self):
-        """Non-integer ID in the URL must be rejected with 422."""
         res = client.delete("/history/not-a-number")
         assert res.status_code == 422
 
@@ -195,7 +240,6 @@ class TestDeleteHistory:
 class TestRecipeLogic:
 
     def test_calculate_nutrition_zeros_on_empty(self):
-        """Missing nutrition data returns zeros, not an exception."""
         from recipe import calculate_nutrition
         result = calculate_nutrition({}, servings=1)
         assert result == {"calories": 0, "protein": 0, "fat": 0, "carbs": 0}
@@ -219,7 +263,5 @@ class TestRecipeLogic:
         assert missing_ingredients(FAKE_RECIPE, pantry) == []
 
     def test_missing_ingredients_handles_no_extended(self):
-        """Recipe without extendedIngredients must not crash."""
         from recipe import missing_ingredients
-        result = missing_ingredients({}, {"garlic"})
-        assert result == []
+        assert missing_ingredients({}, {"garlic"}) == []

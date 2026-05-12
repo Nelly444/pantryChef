@@ -6,29 +6,106 @@ load_dotenv()
 
 API_KEY = os.getenv("SPOONACULAR_API_KEY")
 
+
 class SpoonacularError(Exception):
     """Raised when the Spoonacular API returns an error we can't recover from.
 
     By defining our own exception type, main.py can catch specifically this
-    error and return a clean 502 response — instead of letting a raw crash
-    bubble up to the user as a 500 Internal Server Error.
+    error and return a clean 502 response instead of a raw 500 crash.
     """
     pass
 
 
-def find_ingredients(ingredients: list[str]) -> list[dict]:
-    url = "https://api.spoonacular.com/recipes/findByIngredients"
+# ── Diet / meal normalisation ─────────────────────────────────────────────────
+# Spoonacular only accepts specific strings for diet and meal type.
+# We normalise user input (free text) to those strings before sending.
+
+_VALID_DIETS = {
+    "vegetarian", "vegan", "gluten free", "ketogenic",
+    "paleo", "pescetarian", "primal", "whole30",
+    "lacto-vegetarian", "ovo-vegetarian",
+}
+
+_DIET_ALIASES = {
+    "keto": "ketogenic",
+    "gluten-free": "gluten free",
+    "gf": "gluten free",
+    "plant based": "vegan",
+    "plant-based": "vegan",
+}
+
+# Frontend sends "dinner"/"lunch" but Spoonacular uses "main course".
+_MEAL_TYPE_MAP = {
+    "breakfast": "breakfast",
+    "brunch": "breakfast",
+    "lunch": "main course",
+    "dinner": "main course",
+    "snack": "snack",
+    "appetizer": "appetizer",
+    "dessert": "dessert",
+    "soup": "soup",
+    "salad": "salad",
+}
+
+
+def _resolve_diet(restrictions: list[str] | None) -> str | None:
+    """
+    Pick the first recognised Spoonacular diet from the user's list.
+    Spoonacular only accepts one diet value, so we take the first match.
+    """
+    if not restrictions:
+        return None
+    for term in restrictions:
+        normalised = term.strip().lower()
+        normalised = _DIET_ALIASES.get(normalised, normalised)
+        if normalised in _VALID_DIETS:
+            return normalised
+    return None
+
+
+def _resolve_meal_type(meal: str | None) -> str | None:
+    if not meal:
+        return None
+    return _MEAL_TYPE_MAP.get(meal.strip().lower())
+
+
+# ── API calls ─────────────────────────────────────────────────────────────────
+
+def find_recipes(
+    ingredients: list[str],
+    dietary_restrictions: list[str] | None = None,
+    meal_type: str | None = None,
+) -> list[dict]:
+    """
+    Search for recipes using Spoonacular's complexSearch endpoint.
+
+    We switched from findByIngredients to complexSearch because it supports
+    diet and meal-type filtering while returning the same ingredient match data
+    (usedIngredientCount, missedIngredientCount) when fillIngredients=True.
+    """
     params = {
         "apiKey": API_KEY,
-        "ingredients": ingredients,
+        "includeIngredients": ",".join(ingredients),
+        "fillIngredients": True,
         "number": 10,
-        "ranking": 1,
-        "ignorePantry": True,
     }
+
+    diet = _resolve_diet(dietary_restrictions)
+    if diet:
+        params["diet"] = diet
+
+    meal = _resolve_meal_type(meal_type)
+    if meal:
+        params["type"] = meal
+
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(
+            "https://api.spoonacular.com/recipes/complexSearch",
+            params=params,
+            timeout=10,
+        )
         response.raise_for_status()
-        return response.json()
+        return response.json().get("results", [])
     except requests.exceptions.Timeout:
         raise SpoonacularError("Spoonacular took too long to respond. Try again.")
     except requests.exceptions.HTTPError as e:
@@ -43,13 +120,13 @@ def find_ingredients(ingredients: list[str]) -> list[dict]:
 
 
 def get_recipe_info(recipe_id: int) -> dict:
-    url = f"https://api.spoonacular.com/recipes/{recipe_id}/information"
-    params = {
-        "apiKey": API_KEY,
-        "includeNutrition": True,
-    }
+    """Fetch full recipe details including nutrition and instructions."""
     try:
-        response = requests.get(url, params=params, timeout=10)
+        response = requests.get(
+            f"https://api.spoonacular.com/recipes/{recipe_id}/information",
+            params={"apiKey": API_KEY, "includeNutrition": True},
+            timeout=10,
+        )
         response.raise_for_status()
         return response.json()
     except requests.exceptions.Timeout:

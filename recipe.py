@@ -1,9 +1,21 @@
-from spoonacular import find_ingredients
+from spoonacular import find_recipes
 
 
-def calculate_match(pantry_items: set) -> tuple:
-    """Pick the recipe with the highest ingredient match percentage."""
-    recipes = find_ingredients(list(pantry_items))
+def calculate_match(
+    pantry_items: set,
+    dietary_restrictions: list[str] | None = None,
+    meal_type: str | None = None,
+) -> tuple:
+    """
+    Find the recipe with the highest ingredient match percentage.
+    Passes dietary_restrictions and meal_type to Spoonacular so results
+    are already filtered — no post-processing needed.
+    """
+    recipes = find_recipes(
+        list(pantry_items),
+        dietary_restrictions=dietary_restrictions,
+        meal_type=meal_type,
+    )
     best = None
     best_pct = 0.0
     for recipe in recipes:
@@ -20,10 +32,7 @@ def calculate_match(pantry_items: set) -> tuple:
 
 
 def calculate_nutrition(recipe: dict, servings: int) -> dict:
-    """
-    Scale nutrients by the requested serving count.
-    Returns zeros if the recipe has no nutrition data rather than crashing.
-    """
+    """Scale nutrients by the requested serving count."""
     nutrients = recipe.get("nutrition", {}).get("nutrients", [])
     nutrient_map = {n["name"].lower(): n["amount"] for n in nutrients}
     return {
@@ -35,10 +44,9 @@ def calculate_nutrition(recipe: dict, servings: int) -> dict:
 
 
 def missing_ingredients(recipe: dict, pantry_items: set) -> list:
-    """Return ingredient names that are in the recipe but not in the pantry."""
-    extended = recipe.get("extendedIngredients", [])
+    """Return ingredient names in the recipe that are not in the pantry."""
     return [
         ing["name"]
-        for ing in extended
+        for ing in recipe.get("extendedIngredients", [])
         if ing.get("name", "").lower() not in pantry_items
     ]

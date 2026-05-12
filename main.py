@@ -102,7 +102,11 @@ def suggest_recipes(request: Request, body: RecipeRequest):
     pantry_items = set(item.strip().lower() for item in body.ingredients)
 
     try:
-        best_match, best_pct = calculate_match(pantry_items)
+        best_match, best_pct = calculate_match(
+            pantry_items,
+            dietary_restrictions=body.dietary_restrictions,
+            meal_type=body.meal,
+        )
     except SpoonacularError as e:
         return JSONResponse(status_code=502, content={"error": str(e)})
 
