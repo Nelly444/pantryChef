@@ -4,7 +4,7 @@ import Footer from './components/Footer.jsx'
 import Header from './components/Header.jsx'
 import TopProgress from './components/TopProgress.jsx'
 import { suggestRecipe } from './lib/api.js'
-import { stripHtml } from './lib/text.js'
+import { stripHtml, cleanSummary } from './lib/text.js'
 
 const STAPLES = ['eggs', 'onion', 'garlic', 'rice', 'chicken breast', 'tomato', 'olive oil', 'pasta']
 
@@ -258,8 +258,7 @@ export default function App() {
   }
 
   const recipe = result?.recipe
-  const summaryFull = stripHtml(recipe?.summary ?? '')
-  const summaryPlain = summaryFull.slice(0, 720)
+  const summaryPlain = cleanSummary(recipe?.summary ?? '')
   const nutrition = result?.nutrition
   const cookingSteps = getCookingSteps()
 
