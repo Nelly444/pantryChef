@@ -2,6 +2,7 @@ import { useCallback, useState, useRef } from 'react'
 import Accordion from './components/Accordion.jsx'
 import Footer from './components/Footer.jsx'
 import Header from './components/Header.jsx'
+import { HeartFilled, HeartOutline, Bowl, Plate, Clock, Users, Sprout, Leaf, Flame, Zap, Droplet, Wheat, Check, CheckCircle } from './components/Icons.jsx'
 import TopProgress from './components/TopProgress.jsx'
 import { suggestRecipe } from './lib/api.js'
 import { stripHtml, cleanSummary } from './lib/text.js'
@@ -121,7 +122,7 @@ function CookingMode({ steps, onClose }) {
               className="flex-1 rounded-xl py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
               style={{backgroundColor:'#4e7a42'}}
             >
-              🎉 Done!
+              <CheckCircle size={16} className="inline mr-1.5" /> Done
             </button>
           )}
         </div>
@@ -139,16 +140,16 @@ function FavoritesDrawer({ favs, onSelect, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-center justify-between border-b-2 border-[#8a9a6a]/30 bg-[#f4f0e6] px-5 py-4">
-          <h2 style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-xl font-bold text-[#2c1f0e]">
-            ❤️ Saved Recipes
+          <h2 style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="flex items-center gap-2 text-xl font-bold text-[#2c1f0e]">
+            <HeartFilled size={18} className="text-[#3d5c2e]" /> Saved Recipes
           </h2>
           <button type="button" onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-[#2c1f0e]/10 text-[#2c1f0e] hover:bg-[#2c1f0e]/20">✕</button>
         </div>
         {favs.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-[#5c3d1e]/60">
-            <span className="text-4xl">🫙</span>
+            <Bowl size={48} className="opacity-40" />
             <p className="text-sm">No saved recipes yet.</p>
-            <p className="text-xs">Tap ♡ on any recipe card.</p>
+            <p className="text-xs">Tap the heart on any recipe card.</p>
           </div>
         ) : (
           <ul className="divide-y divide-[#8a9a6a]/20 px-4 py-2">
@@ -162,7 +163,7 @@ function FavoritesDrawer({ favs, onSelect, onClose }) {
                   {f.image ? (
                     <img src={f.image} alt="" className="h-14 w-14 rounded-xl object-cover shrink-0" />
                   ) : (
-                    <div className="h-14 w-14 rounded-xl bg-[#d8e4c0] shrink-0 grid place-items-center text-2xl">🍽</div>
+                    <div className="h-14 w-14 rounded-xl bg-[#d8e4c0] shrink-0 grid place-items-center text-[#5c3d1e]/50"><Plate size={24} /></div>
                   )}
                   <div className="min-w-0">
                     <p className="font-bold text-sm text-[#2c1f0e] line-clamp-2">{f.title}</p>
@@ -307,7 +308,7 @@ export default function App() {
             onClick={() => setShowFavs(true)}
             className="shrink-0 flex flex-col items-center gap-1 rounded-2xl border-2 border-[#8a9a6a]/40 bg-white px-4 py-3 text-[#3d5c2e] shadow-sm hover:bg-[#e2ead4] transition"
           >
-            <span className="text-2xl">❤️</span>
+            <HeartFilled size={22} />
             <span className="text-xs font-bold text-[#5c3d1e]">Saved</span>
             {favs.length > 0 && (
               <span className="rounded-full bg-[#3d5c2e] px-2 py-0.5 text-[10px] font-bold text-white">{favs.length}</span>
@@ -496,7 +497,7 @@ export default function App() {
 
             {!result && !error && (
               <div className="rounded-3xl border-2 border-dashed border-[#8a9a6a]/40 bg-white/60 p-10 text-center">
-                <div className="mx-auto mb-4 text-5xl">🫙</div>
+                <div className="mx-auto mb-4 text-[#5c3d1e]/30"><Bowl size={56} /></div>
                 <p style={{fontFamily:'"Playfair Display",Georgia,serif'}} className="text-xl font-bold italic text-[#2c1f0e]">
                   Your recipe will appear here.
                 </p>
@@ -520,7 +521,7 @@ export default function App() {
                           className="h-52 w-full object-cover md:h-full md:min-h-[260px]"
                         />
                       ) : (
-                        <div className="flex h-52 items-center justify-center text-4xl" style={{backgroundColor:'#d8e4c0'}}>🍽</div>
+                        <div className="flex h-52 items-center justify-center text-[#5c3d1e]/30" style={{backgroundColor:'#d8e4c0'}}><Plate size={48} /></div>
                       )}
                       <div className="absolute left-3 top-3 rounded-full border border-white/60 px-3 py-1 text-xs font-bold text-white shadow" style={{backgroundColor:'#2c1f0e'}}>
                         {result.match_percentage}% match
@@ -544,22 +545,22 @@ export default function App() {
                               void heartRef.current?.offsetWidth
                               heartRef.current?.classList.add('heart-pop')
                             }}
-                            className="shrink-0 text-2xl transition hover:scale-110"
+                            className="shrink-0 transition hover:scale-110 text-[#3d5c2e]"
                             title={isFav(recipe.id) ? 'Remove from saved' : 'Save recipe'}
                           >
-                            {isFav(recipe.id) ? '❤️' : '🤍'}
+                            {isFav(recipe.id) ? <HeartFilled size={22} /> : <HeartOutline size={22} />}
                           </button>
                         </div>
 
                         <div className="mt-3 flex flex-wrap gap-2">
                           {typeof recipe.readyInMinutes === 'number' && (
-                            <span className="rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]">⏱ {recipe.readyInMinutes} min</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]"><Clock size={12} /> {recipe.readyInMinutes} min</span>
                           )}
                           {typeof recipe.servings === 'number' && (
-                            <span className="rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]">🍽 Serves {recipe.servings}</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#8a9a6a]/40 bg-[#f4f0e6] px-3 py-1 text-xs font-bold text-[#5c3d1e]"><Users size={12} /> Serves {recipe.servings}</span>
                           )}
-                          {recipe.vegetarian && <span className="rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]">🥦 Vegetarian</span>}
-                          {recipe.vegan && <span className="rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]">🌱 Vegan</span>}
+                          {recipe.vegetarian && <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]"><Leaf size={12} /> Vegetarian</span>}
+                          {recipe.vegan && <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#7a9e6e]/40 bg-[#7a9e6e]/10 px-3 py-1 text-xs font-bold text-[#4e7a42]"><Sprout size={12} /> Vegan</span>}
                         </div>
 
                         {/* Coverage bar */}
@@ -569,13 +570,13 @@ export default function App() {
                         {nutrition && (
                           <div className="mt-4 grid grid-cols-4 gap-2">
                             {[
-                              ['🔥', 'Calories', Math.round(nutrition.calories ?? 0), ''],
-                              ['💪', 'Protein', Math.round(nutrition.protein ?? 0), 'g'],
-                              ['🧈', 'Fat', Math.round(nutrition.fat ?? 0), 'g'],
-                              ['🌾', 'Carbs', Math.round(nutrition.carbs ?? 0), 'g'],
+                              [<Flame size={14} />, 'Calories', Math.round(nutrition.calories ?? 0), ''],
+                              [<Zap size={14} />, 'Protein', Math.round(nutrition.protein ?? 0), 'g'],
+                              [<Droplet size={14} />, 'Fat', Math.round(nutrition.fat ?? 0), 'g'],
+                              [<Wheat size={14} />, 'Carbs', Math.round(nutrition.carbs ?? 0), 'g'],
                             ].map(([icon, label, val, unit]) => (
                               <div key={label} className="rounded-xl border-2 border-[#8a9a6a]/25 bg-[#f4f0e6] px-2 py-2 text-center">
-                                <p className="text-base">{icon}</p>
+                                <p className="flex justify-center text-[#5c3d1e]/60 mb-0.5">{icon}</p>
                                 <p className="text-[10px] font-bold uppercase tracking-wide text-[#5c3d1e]/60">{label}</p>
                                 <p className="font-black text-[#2c1f0e]">{val}{unit}</p>
                               </div>
@@ -630,7 +631,7 @@ export default function App() {
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-[#4e7a42] font-semibold">✓ You have everything for this recipe!</p>
+                    <p className="flex items-center gap-2 text-[#4e7a42] font-semibold"><Check size={16} /> You have everything for this recipe.</p>
                   )}
                 </Accordion>
 

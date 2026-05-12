@@ -1,11 +1,13 @@
+import { Leaf } from './Icons.jsx'
+
 export default function Header({ onNavigate }) {
   return (
     <header className="sticky top-0 z-[150] border-b border-[#8a9a6a]/30 bg-[#2c1f0e] shadow-lg">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
 
         <a href="#top" className="flex items-center gap-3 no-underline group">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#3d5c2e]/60 ring-2 ring-[#8a9a6a]/40 text-lg">
-            🌿
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#3d5c2e]/60 ring-2 ring-[#8a9a6a]/40 text-[#d8e4c0]">
+            <Leaf size={18} />
           </span>
           <div className="flex flex-col leading-none">
             <span
