@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import confetti from 'canvas-confetti'
 import { useMealPlan } from '../hooks/useMealPlan.js'
 import EmptyState from './EmptyState.jsx'
@@ -37,17 +37,11 @@ function fireConfetti() {
 export default function GroceryListView({ onNavigateHome }) {
   const { plan, DAYS, DAY_SHORT } = useMealPlan()
   const [checked, setChecked] = useState(loadChecked)
-  const prevCompleteRef = useRef(false)
+  const [celebrated, setCelebrated] = useState(false)
 
   useEffect(() => {
     localStorage.setItem(GROCERY_KEY, JSON.stringify([...checked]))
   }, [checked])
-
-  const toggle = (key) => setChecked(prev => {
-    const next = new Set(prev)
-    next.has(key) ? next.delete(key) : next.add(key)
-    return next
-  })
 
   // Build ingredient → days map
   const itemDays = {}
@@ -66,11 +60,28 @@ export default function GroceryListView({ onNavigateHome }) {
   const totalChecked = allItems.filter(it => checked.has(it.name.toLowerCase())).length
   const isComplete = totalNeeded > 0 && totalChecked === totalNeeded
 
-  // Fire confetti exactly once when the list goes from incomplete to complete
+  // Reset celebrated flag when list becomes incomplete again
   useEffect(() => {
-    if (isComplete && !prevCompleteRef.current) fireConfetti()
-    prevCompleteRef.current = isComplete
+    if (!isComplete) setCelebrated(false)
   }, [isComplete])
+
+  const toggle = (key) => {
+    setChecked(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) {
+        next.delete(key)
+      } else {
+        next.add(key)
+        // Check right now — before React re-renders — if this was the last item
+        const newCheckedCount = allItems.filter(it => next.has(it.name.toLowerCase())).length
+        if (newCheckedCount === totalNeeded && !celebrated) {
+          setCelebrated(true)
+          fireConfetti()
+        }
+      }
+      return next
+    })
+  }
 
   if (totalNeeded === 0) {
     const hasAnyPlan = DAYS.some(d => plan[d])

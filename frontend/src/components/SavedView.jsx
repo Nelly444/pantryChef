@@ -20,7 +20,7 @@ export default function SavedView({ favs, isFav, onToggleFav, onSelect, onNaviga
               result={{
                 recipe: fav,
                 match_percentage: fav.match_percentage ?? 0,
-                missing_ingredients: fav.missing_ingredients ?? [],
+                missing_ingredients: fav.missing_ingredients ?? null,
                 nutrition: fav.nutrition ?? null,
               }}
               isFav={isFav(fav.id)}

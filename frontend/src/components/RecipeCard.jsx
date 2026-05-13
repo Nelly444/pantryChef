@@ -1,7 +1,8 @@
 import { Clock, Flame, Users, Leaf, HeartFilled, HeartOutline, Plate } from './Icons.jsx'
 
 export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
-  const { recipe, match_percentage, missing_ingredients = [], nutrition } = result
+  // missing_ingredients may be null for old saves (unknown state) vs [] (verified all in pantry)
+  const { recipe, match_percentage, missing_ingredients = null, nutrition } = result
 
   const matchColor =
     match_percentage >= 80 ? 'bg-forest' :
@@ -79,14 +80,11 @@ export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
           )}
         </div>
 
-        {/* Missing ingredients */}
-        {missing_ingredients.length > 0 ? (
+        {/* Missing ingredients — null means unknown (old save), [] means verified all in pantry */}
+        {missing_ingredients === null ? null : missing_ingredients.length > 0 ? (
           <div className="mb-3 flex flex-wrap gap-1">
             {missing_ingredients.slice(0, 3).map(m => (
-              <span
-                key={m}
-                className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600"
-              >
+              <span key={m} className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
                 {m}
               </span>
             ))}
