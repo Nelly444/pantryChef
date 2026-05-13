@@ -5,7 +5,7 @@ import CoverageBar from './components/CoverageBar.jsx'
 import FavoritesDrawer from './components/FavoritesDrawer.jsx'
 import Footer from './components/Footer.jsx'
 import Header from './components/Header.jsx'
-import { HeartFilled, HeartOutline, Bowl, Plate, Clock, Users, Sprout, Leaf, Flame, Zap, Droplet, Wheat, Check } from './components/Icons.jsx'
+import { HeartFilled, HeartOutline, Bowl, Plate, Clock, Users, Sprout, Leaf, Flame, Zap, Droplet, Wheat, Check, CheckCircle } from './components/Icons.jsx'
 import TopProgress from './components/TopProgress.jsx'
 import { suggestRecipe } from './lib/api.js'
 import { stripHtml, cleanSummary } from './lib/text.js'
@@ -104,7 +104,15 @@ export default function App() {
   const cookingSteps  = getCookingSteps()
 
   return (
-    <div id="top" className="flex min-h-screen flex-col bg-cream">
+    <div id="top" className="relative flex min-h-screen flex-col bg-cream">
+
+      {/* Decorative background blobs — purely visual depth, no interaction */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 -right-20 h-[600px] w-[600px] rounded-full bg-sage/10 blur-[120px]" />
+        <div className="absolute top-1/3 -left-48 h-[500px] w-[500px] rounded-full bg-forest/8 blur-[100px]" />
+        <div className="absolute bottom-10 right-1/4 h-[400px] w-[400px] rounded-full bg-olive/10 blur-[90px]" />
+      </div>
+
       <TopProgress active={loading} />
       <Header onNavigate={(key) => scrollToId(key)} />
 
@@ -137,6 +145,14 @@ export default function App() {
             <p className="mt-4 max-w-xl text-base leading-relaxed text-bark-light/80">
               Add your pantry ingredients. We will find the best recipe you can make right now, no shopping needed.
             </p>
+            <div className="mt-5 flex flex-wrap gap-4 text-sm text-bark-light/70">
+              {['5,000+ recipes', 'Instant matching'].map(stat => (
+                <span key={stat} className="inline-flex items-center gap-1.5">
+                  <CheckCircle size={14} className="text-forest" />
+                  {stat}
+                </span>
+              ))}
+            </div>
           </div>
 
           <button
@@ -153,6 +169,26 @@ export default function App() {
               </span>
             )}
           </button>
+        </section>
+
+        {/* ── How it works ── */}
+        <section className="mb-10">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { icon: <Sprout size={22} />, step: '01', title: 'Add what you have', desc: 'Type any ingredient — fridge, pantry, or freezer. No limits on what counts.' },
+              { icon: <Zap size={22} />,    step: '02', title: 'We rank the matches', desc: 'Our algorithm scores thousands of recipes by how much you already own.' },
+              { icon: <Flame size={22} />,  step: '03', title: 'Cook with confidence', desc: 'Step-by-step cooking mode, full nutrition facts, and one-tap saving.' },
+            ].map(({ icon, step, title, desc }) => (
+              <div key={step} className="relative overflow-hidden rounded-2xl border border-olive/20 bg-white/70 p-5 backdrop-blur-sm">
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-forest/10 text-forest">
+                  {icon}
+                </div>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-forest/60">{step}</p>
+                <h3 className="font-display mb-1.5 text-base font-bold text-bark">{title}</h3>
+                <p className="text-sm leading-relaxed text-bark-light/60">{desc}</p>
+              </div>
+            ))}
+          </div>
         </section>
 
         <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
@@ -359,14 +395,29 @@ export default function App() {
             )}
 
             {!result && !error && (
-              <div className="rounded-3xl border-2 border-dashed border-olive/40 bg-white/60 p-10 text-center">
-                <div className="mx-auto mb-4 text-bark-light/30"><Bowl size={56} /></div>
-                <p className="font-display text-xl font-bold italic text-bark">
-                  Your recipe will appear here.
+              <div className="flex flex-col items-center rounded-3xl border-2 border-dashed border-olive/30 bg-white/50 px-8 py-16 text-center backdrop-blur-sm">
+                <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-olive/20 bg-cream text-bark-light/25">
+                  <Bowl size={44} />
+                </div>
+                <p className="font-display text-2xl font-black italic text-bark">Your recipe will appear here.</p>
+                <p className="mt-2 max-w-xs text-sm leading-relaxed text-bark-light/60">
+                  Add ingredients to your pantry, then click <strong className="text-bark">Suggest a recipe</strong>.
                 </p>
-                <p className="mt-2 text-sm text-bark-light/65">
-                  Add ingredients to your pantry, then click <strong>Suggest a recipe</strong>.
-                </p>
+                <div className="mt-8 flex items-center gap-3 rounded-2xl border border-olive/20 bg-cream px-6 py-4 text-xs text-bark-light/60">
+                  {[
+                    { icon: <Sprout size={15} />, label: 'Add ingredients' },
+                    { icon: <Zap size={15} />,    label: 'Match recipes' },
+                    { icon: <Flame size={15} />,  label: 'Start cooking' },
+                  ].map(({ icon, label }, i, arr) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className="text-forest">{icon}</span>
+                        <span>{label}</span>
+                      </div>
+                      {i < arr.length - 1 && <span className="text-olive/40">→</span>}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
