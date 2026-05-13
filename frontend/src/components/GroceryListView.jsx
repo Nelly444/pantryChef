@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import confetti from 'canvas-confetti'
 import { useMealPlan } from '../hooks/useMealPlan.js'
 import EmptyState from './EmptyState.jsx'
 import { Bowl, Leaf } from './Icons.jsx'
@@ -27,21 +26,19 @@ function loadChecked() {
   catch { return new Set() }
 }
 
-function fireConfetti() {
-  const colors = ['#3d5c2e', '#7a9e6e', '#d8e4c0', '#f4f0e6', '#9b8b4a']
-  confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 }, colors })
-  setTimeout(() => confetti({ particleCount: 60, spread: 120, origin: { y: 0.45 }, colors, angle: 60 }), 200)
-  setTimeout(() => confetti({ particleCount: 60, spread: 120, origin: { y: 0.45 }, colors, angle: 120 }), 350)
-}
-
 export default function GroceryListView({ onNavigateHome }) {
   const { plan, DAYS, DAY_SHORT } = useMealPlan()
   const [checked, setChecked] = useState(loadChecked)
-  const [celebrated, setCelebrated] = useState(false)
 
   useEffect(() => {
     localStorage.setItem(GROCERY_KEY, JSON.stringify([...checked]))
   }, [checked])
+
+  const toggle = (key) => {
+    const next = new Set(checked)
+    next.has(key) ? next.delete(key) : next.add(key)
+    setChecked(next)
+  }
 
   // Build ingredient → days map
   const itemDays = {}
@@ -59,29 +56,6 @@ export default function GroceryListView({ onNavigateHome }) {
   const totalNeeded = allItems.length
   const totalChecked = allItems.filter(it => checked.has(it.name.toLowerCase())).length
   const isComplete = totalNeeded > 0 && totalChecked === totalNeeded
-
-  // Reset celebrated flag when list becomes incomplete again
-  useEffect(() => {
-    if (!isComplete) setCelebrated(false)
-  }, [isComplete])
-
-  const toggle = (key) => {
-    setChecked(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        next.delete(key)
-      } else {
-        next.add(key)
-        // Check right now — before React re-renders — if this was the last item
-        const newCheckedCount = allItems.filter(it => next.has(it.name.toLowerCase())).length
-        if (newCheckedCount === totalNeeded && !celebrated) {
-          setCelebrated(true)
-          fireConfetti()
-        }
-      }
-      return next
-    })
-  }
 
   if (totalNeeded === 0) {
     const hasAnyPlan = DAYS.some(d => plan[d])
@@ -140,11 +114,11 @@ export default function GroceryListView({ onNavigateHome }) {
           {totalChecked > 0 && (
             <button
               type="button"
-              onClick={() => setChecked(prev => {
-                const next = new Set(prev)
+              onClick={() => {
+                const next = new Set(checked)
                 allItems.forEach(it => next.delete(it.name.toLowerCase()))
-                return next
-              })}
+                setChecked(next)
+              }}
               className="btn-ghost rounded-xl border border-olive/30 bg-white px-4 py-2 text-sm font-bold text-bark-light/60"
             >
               Clear checked
