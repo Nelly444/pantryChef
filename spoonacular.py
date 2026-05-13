@@ -88,7 +88,9 @@ def find_recipes(
         "apiKey": API_KEY,
         "includeIngredients": ",".join(ingredients),
         "fillIngredients": True,
-        "number": 10,
+        "addRecipeInformation": True,
+        "addRecipeNutrition": True,
+        "number": 15,
     }
 
     diet = _resolve_diet(dietary_restrictions)

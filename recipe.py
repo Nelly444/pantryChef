@@ -1,16 +1,16 @@
 from spoonacular import find_recipes
 
 
-def calculate_match(
+def find_top_matches(
     pantry_items: set,
     dietary_restrictions: list[str] | None = None,
     meal_type: str | None = None,
     servings: int | None = None,
-) -> tuple:
+    limit: int = 6,
+) -> list[dict]:
     """
-    Find the recipe with the highest ingredient match percentage.
-    Passes dietary_restrictions, meal_type, and servings to Spoonacular
-    so results are already filtered — no post-processing needed.
+    Return the top `limit` recipes scored by ingredient match percentage.
+    Each entry has recipe, match_percentage, nutrition, and missing_ingredients.
     """
     recipes = find_recipes(
         list(pantry_items),
@@ -18,19 +18,28 @@ def calculate_match(
         meal_type=meal_type,
         servings=servings,
     )
-    best = None
-    best_pct = 0.0
+    scored = []
     for recipe in recipes:
         used = recipe.get("usedIngredientCount", 0)
         missed = recipe.get("missedIngredientCount", 0)
         total = used + missed
         if total == 0:
             continue
-        pct = used / total * 100
-        if pct > best_pct:
-            best_pct = pct
-            best = recipe
-    return best, best_pct
+        pct = round(used / total * 100, 2)
+        nutrition = calculate_nutrition(recipe, servings or 1)
+        missing = [
+            ing.get("name", "")
+            for ing in recipe.get("missedIngredients", [])
+            if ing.get("name")
+        ]
+        scored.append({
+            "recipe": recipe,
+            "match_percentage": pct,
+            "nutrition": nutrition,
+            "missing_ingredients": missing,
+        })
+    scored.sort(key=lambda x: x["match_percentage"], reverse=True)
+    return scored[:limit]
 
 
 def calculate_nutrition(recipe: dict, servings: int) -> dict:
@@ -45,10 +54,3 @@ def calculate_nutrition(recipe: dict, servings: int) -> dict:
     }
 
 
-def missing_ingredients(recipe: dict, pantry_items: set) -> list:
-    """Return ingredient names in the recipe that are not in the pantry."""
-    return [
-        ing["name"]
-        for ing in recipe.get("extendedIngredients", [])
-        if ing.get("name", "").lower() not in pantry_items
-    ]
