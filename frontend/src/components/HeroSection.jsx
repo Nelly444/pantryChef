@@ -48,7 +48,7 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
           Your pantry<br className="hidden sm:block" /> has a recipe.
         </h1>
 
-        <ShineBorder borderRadius={20} borderWidth={2} duration={8} color={['#3d5c2e', '#7a9e6e', '#d8e4c0', '#8a9a6a']} className="shadow-lg">
+        <ShineBorder borderRadius={20} borderWidth={2} duration={3} color={['#3d5c2e', '#7a9e6e', '#d8e4c0', '#8a9a6a']} className="shadow-lg">
           <form onSubmit={handleSubmit} className="p-3">
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -65,11 +65,12 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
                 />
               </div>
               <button type="button" onClick={() => tryAdd(ingredient)}
-                className="rounded-xl border border-olive/20 bg-cream px-4 py-3 text-sm font-bold text-bark-light transition hover:bg-cream-dark active:scale-[0.98]">
+                className="btn-ghost rounded-xl border border-olive/20 bg-cream px-4 py-3 text-sm font-bold text-bark-light hover:bg-cream-dark">
                 Add
               </button>
               <button type="submit" disabled={loading || ingredientsList.length === 0}
-                className="rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50">
+                className="btn-shimmer rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ backgroundImage: loading ? undefined : 'linear-gradient(90deg, #3d5c2e 0%, #5c7a42 50%, #3d5c2e 100%)' }}>
                 {loading ? 'Searching…' : 'Find Recipes'}
               </button>
             </div>

@@ -7,9 +7,13 @@ export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
     match_percentage >= 80 ? 'bg-forest' :
     match_percentage >= 60 ? 'bg-harvest' : 'bg-rust'
 
+  const matchGlow =
+    match_percentage >= 80 ? 'group-hover:border-forest/40' :
+    match_percentage >= 60 ? 'group-hover:border-harvest/40' : 'group-hover:border-rust/30'
+
   return (
     <article
-      className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-olive/20 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className={`card-enter group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-olive/20 bg-white shadow-sm card-interactive ${matchGlow}`}
       onClick={() => onSelect(result)}
     >
       {/* Image */}
@@ -21,21 +25,24 @@ export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
             className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-48 items-center justify-center text-bark-light/20">
+          <div className="flex h-48 items-center justify-center bg-olive-light text-bark-light/20">
             <Plate size={48} />
           </div>
         )}
 
+        {/* Gradient overlay on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
         {/* Match badge */}
-        <div className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-black text-white shadow-sm ${matchColor}`}>
+        <div className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-black text-white shadow-sm transition-transform duration-200 group-hover:scale-105 ${matchColor}`}>
           {Math.round(match_percentage)}% match
         </div>
 
-        {/* Save button */}
+        {/* Save button — passes full result so missing_ingredients are preserved */}
         <button
           type="button"
-          onClick={e => { e.stopPropagation(); onToggleFav(recipe, match_percentage) }}
-          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-forest shadow-sm transition hover:scale-110 active:scale-95"
+          onClick={e => { e.stopPropagation(); onToggleFav(result) }}
+          className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-forest shadow-sm transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-md active:scale-90"
           aria-label={isFav ? 'Remove from saved' : 'Save recipe'}
         >
           {isFav ? <HeartFilled size={14} /> : <HeartOutline size={14} />}
@@ -44,7 +51,7 @@ export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display mb-3 line-clamp-2 text-base font-bold italic leading-snug text-bark">
+        <h3 className="font-display mb-3 line-clamp-2 text-base font-bold italic leading-snug text-bark transition-colors duration-200 group-hover:text-forest">
           {recipe.title}
         </h3>
 
@@ -102,7 +109,7 @@ export default function RecipeCard({ result, isFav, onToggleFav, onSelect }) {
           <button
             type="button"
             onClick={e => { e.stopPropagation(); onSelect(result) }}
-            className="w-full rounded-xl bg-bark px-3 py-2.5 text-xs font-bold text-white transition hover:opacity-90 active:scale-[0.98]"
+            className="btn-primary w-full rounded-xl bg-bark px-3 py-2.5 text-xs font-bold text-white"
           >
             View Recipe
           </button>

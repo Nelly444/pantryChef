@@ -1,6 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 function formatHttpError(status, data) {
+  // Backend sends { error: '...' } for 4xx/5xx responses
+  if (typeof data?.error === 'string') return data.error
+  // FastAPI/Pydantic validation sends { detail: [...] }
   if (data?.detail) {
     const d = data.detail
     if (Array.isArray(d)) return d.map(e => e.msg || JSON.stringify(e)).join(' ')

@@ -17,7 +17,12 @@ export default function SavedView({ favs, isFav, onToggleFav, onSelect, onNaviga
           {favs.map(fav => (
             <RecipeCard
               key={fav.id}
-              result={{ recipe: fav, match_percentage: fav.match_percentage ?? 0, missing_ingredients: [], nutrition: null }}
+              result={{
+                recipe: fav,
+                match_percentage: fav.match_percentage ?? 0,
+                missing_ingredients: fav.missing_ingredients ?? [],
+                nutrition: fav.nutrition ?? null,
+              }}
               isFav={isFav(fav.id)}
               onToggleFav={onToggleFav}
               onSelect={onSelect}

@@ -19,7 +19,42 @@
   h1, h2, h3 {
     font-family: 'Playfair Display', Georgia, serif;
   }
+
+  /* Smooth focus outline for keyboard navigation */
+  :focus-visible {
+    outline: 2px solid #3d5c2e;
+    outline-offset: 2px;
+  }
 }
+
+/* ── ShineBorder — conic gradient rotating around the border ─────────────── */
+/* @property lets us animate --shine-angle as a real <angle>, enabling smooth  */
+/* conic-gradient rotation. Without it, browsers can't interpolate angles in   */
+/* custom properties and the animation would jump frame-to-frame.              */
+
+@property --shine-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes shine-rotate {
+  to { --shine-angle: 360deg; }
+}
+
+/* Full-perimeter gradient — all four sides lit, colors travel around the edge. */
+.shine-border {
+  background: conic-gradient(
+    from var(--shine-angle),
+    var(--shine-c1)   0%,
+    var(--shine-c2)  33%,
+    var(--shine-c3)  66%,
+    var(--shine-c1) 100%
+  );
+  animation: shine-rotate var(--shine-duration, 3s) linear infinite;
+}
+
+/* ── Ingredient tags ─────────────────────────────────────────────────────── */
 
 @keyframes tag-in {
   from { opacity: 0; transform: scale(0.8) translateY(4px); }
@@ -28,12 +63,132 @@
 
 .pantry-tag {
   animation: tag-in 0.18s ease-out both;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .pantry-tag:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(44,31,14,0.12);
 }
+
+/* ── View transition (page-level fade + lift) ────────────────────────────── */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.view-enter {
+  animation: fade-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Staggered card entrance ─────────────────────────────────────────────── */
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.card-enter {
+  animation: card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.card-enter:nth-child(1) { animation-delay: 0ms; }
+.card-enter:nth-child(2) { animation-delay: 50ms; }
+.card-enter:nth-child(3) { animation-delay: 100ms; }
+.card-enter:nth-child(4) { animation-delay: 150ms; }
+.card-enter:nth-child(5) { animation-delay: 200ms; }
+.card-enter:nth-child(6) { animation-delay: 250ms; }
+
+/* ── Interactive card hover ──────────────────────────────────────────────── */
+
+.card-interactive {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(61, 92, 46, 0.14), 0 2px 8px rgba(61, 92, 46, 0.08);
+  border-color: rgba(61, 92, 46, 0.3);
+}
+
+.card-interactive:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(61, 92, 46, 0.10);
+}
+
+/* ── Button press ripple ─────────────────────────────────────────────────── */
+
+@keyframes btn-press {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+.btn-press:active {
+  animation: btn-press 0.18s ease;
+}
+
+/* ── Primary button glow on hover ────────────────────────────────────────── */
+
+.btn-primary {
+  position: relative;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(61, 92, 46, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(61, 92, 46, 0.2);
+}
+
+/* ── Ghost / outline button ──────────────────────────────────────────────── */
+
+.btn-ghost {
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+              transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.btn-ghost:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(44, 31, 14, 0.08);
+}
+
+.btn-ghost:active {
+  transform: scale(0.97);
+}
+
+/* ── Destructive button ──────────────────────────────────────────────────── */
+
+.btn-danger {
+  transition: background-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(139, 61, 32, 0.2);
+}
+
+.btn-danger:active { transform: scale(0.97); }
+
+/* ── Input focus glow ────────────────────────────────────────────────────── */
+
+.input-glow {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.input-glow:focus {
+  border-color: #3d5c2e;
+  box-shadow: 0 0 0 3px rgba(61, 92, 46, 0.12);
+  background-color: #fff;
+}
+
+/* ── Progress bar / indeterminate ────────────────────────────────────────── */
 
 @keyframes indeterminate-bar {
   0%   { transform: translateX(-120%); }
@@ -43,11 +198,15 @@
   animation: indeterminate-bar 1.1s ease-in-out infinite;
 }
 
+/* ── Cooking step transition ─────────────────────────────────────────────── */
+
 @keyframes step-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .step-in { animation: step-in 0.3s ease forwards; }
+
+/* ── Heart save button ───────────────────────────────────────────────────── */
 
 @keyframes heart-pop {
   0%   { transform: scale(1); }
@@ -55,6 +214,8 @@
   100% { transform: scale(1); }
 }
 .heart-pop { animation: heart-pop 0.3s ease; }
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────────── */
 
 @keyframes shimmer {
   0%   { background-position: -600px 0; }
@@ -67,9 +228,115 @@
   border-radius: 0.5rem;
 }
 
+/* ── Checkbox check animation ────────────────────────────────────────────── */
+
+@keyframes check-in {
+  from { transform: scale(0) rotate(-15deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+.check-mark { animation: check-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* ── Generate button shimmer overlay ─────────────────────────────────────── */
+
+@keyframes btn-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.btn-shimmer {
+  background-size: 200% auto;
+  transition: opacity 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.btn-shimmer:hover:not(:disabled) {
+  background-position: right center;
+  animation: btn-shimmer 1.5s linear infinite;
+  box-shadow: 0 4px 20px rgba(61, 92, 46, 0.4);
+  transform: translateY(-1px);
+}
+
+/* ── Nav active indicator slide ──────────────────────────────────────────── */
+
+.nav-item {
+  position: relative;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #3d5c2e;
+  border-radius: 1px;
+  transform: translateX(-50%);
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-item.active::after {
+  width: 60%;
+}
+
+/* ── Filter pill slide ───────────────────────────────────────────────────── */
+
+.filter-pill {
+  transition: color 0.18s ease, background-color 0.18s ease,
+              transform 0.15s ease, box-shadow 0.18s ease;
+}
+
+.filter-pill:hover:not(.active) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(44, 31, 14, 0.1);
+}
+
+.filter-pill.active {
+  box-shadow: 0 2px 8px rgba(61, 92, 46, 0.25);
+}
+
+/* ── Stat card entrance ──────────────────────────────────────────────────── */
+
+.stat-card {
+  animation: card-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0ms; }
+.stat-card:nth-child(2) { animation-delay: 60ms; }
+.stat-card:nth-child(3) { animation-delay: 120ms; }
+.stat-card:nth-child(4) { animation-delay: 180ms; }
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(61, 92, 46, 0.1);
+}
+
+/* ── Day card in meal plan ───────────────────────────────────────────────── */
+
+.day-card {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.day-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(61, 92, 46, 0.12);
+  border-color: rgba(61, 92, 46, 0.3);
+}
+
+/* ── Reduced motion overrides ────────────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .indeterminate-bar { animation: none; width: 100%; opacity: 0.6; }
-  .step-in  { animation: none; }
-  .skeleton { animation: none; background: #e8e2d8; }
+  .step-in    { animation: none; }
+  .skeleton   { animation: none; background: #e8e2d8; }
+  .view-enter { animation: none; }
+  .card-enter { animation: none; }
+  .card-interactive, .day-card, .stat-card { transition: none; }
+  .btn-primary, .btn-ghost, .btn-danger { transition: none; }
+  .btn-shimmer:hover:not(:disabled) { animation: none; }
+  .nav-item::after { transition: none; }
+  .filter-pill { transition: none; }
 }

@@ -8,11 +8,11 @@ const FILTERS = [
 
 export default function FilterBar({ active, onChange, results }) {
   const counts = {
-    all:        results.length,
+    all:          results.length,
     'high-match': results.filter(r => r.match_percentage >= 80).length,
-    quick:      results.filter(r => (r.recipe.readyInMinutes ?? 999) <= 30).length,
-    vegetarian: results.filter(r => r.recipe.vegetarian).length,
-    '1-missing': results.filter(r => r.missing_ingredients.length <= 1).length,
+    quick:        results.filter(r => (r.recipe.readyInMinutes ?? 999) <= 30).length,
+    vegetarian:   results.filter(r => r.recipe.vegetarian).length,
+    '1-missing':  results.filter(r => r.missing_ingredients.length <= 1).length,
   }
 
   return (
@@ -22,10 +22,10 @@ export default function FilterBar({ active, onChange, results }) {
           key={id}
           type="button"
           onClick={() => onChange(id)}
-          className={`shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition ${
+          className={`filter-pill shrink-0 rounded-full border px-4 py-2 text-xs font-bold ${
             active === id
-              ? 'border-forest bg-forest text-white shadow-sm'
-              : 'border-olive/30 bg-white text-bark-light/70 hover:border-forest/40 hover:text-bark'
+              ? 'active border-forest bg-forest text-white'
+              : 'border-olive/30 bg-white text-bark-light/70 hover:border-forest/40 hover:bg-cream hover:text-bark'
           }`}
         >
           {label}

@@ -1,9 +1,11 @@
-import { Leaf, Search, HeartFilled } from './Icons.jsx'
+import { Leaf, HeartFilled } from './Icons.jsx'
 
 const NAV_ITEMS = [
   { id: 'home',    label: 'Home' },
   { id: 'pantry',  label: 'Pantry' },
   { id: 'saved',   label: 'Saved' },
+  { id: 'plan',    label: 'Meal Plan' },
+  { id: 'grocery', label: 'Grocery' },
 ]
 
 export default function NavBar({ view, onNavigate, ingredientCount, savedCount }) {
@@ -15,26 +17,26 @@ export default function NavBar({ view, onNavigate, ingredientCount, savedCount }
         <button
           type="button"
           onClick={() => onNavigate('home')}
-          className="flex shrink-0 items-center gap-2.5 no-underline group"
+          className="group flex shrink-0 items-center gap-2.5 no-underline"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-forest text-white shadow-sm transition group-hover:bg-forest/85">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-forest text-white shadow-sm transition-all duration-200 group-hover:bg-forest/85 group-hover:shadow-[0_0_0_4px_rgba(61,92,46,0.12)] group-hover:scale-105">
             <Leaf size={16} />
           </span>
-          <span className="font-display text-lg font-bold italic text-bark hidden sm:block">
+          <span className="font-display hidden text-lg font-bold italic text-bark transition-colors group-hover:text-forest sm:block">
             PantryChef
           </span>
         </button>
 
         {/* Center nav */}
-        <nav className="flex flex-1 justify-center gap-1">
+        <nav className="flex flex-1 justify-center gap-0.5">
           {NAV_ITEMS.map(({ id, label }) => (
             <button
               key={id}
               type="button"
               onClick={() => onNavigate(id)}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest ${
+              className={`nav-item rounded-lg px-3 py-2 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest ${
                 view === id
-                  ? 'bg-forest/10 text-forest'
+                  ? 'active bg-forest/10 text-forest'
                   : 'text-bark-light/65 hover:bg-cream hover:text-bark'
               }`}
             >
@@ -46,7 +48,7 @@ export default function NavBar({ view, onNavigate, ingredientCount, savedCount }
         {/* Right utilities */}
         <div className="flex shrink-0 items-center gap-2">
           {ingredientCount > 0 && (
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-olive/30 bg-cream px-3 py-1 text-xs font-bold text-bark-light">
+            <span className="hidden items-center gap-1.5 rounded-full border border-olive/30 bg-cream px-3 py-1 text-xs font-bold text-bark-light transition-all duration-200 sm:inline-flex">
               <Leaf size={11} className="text-forest" />
               {ingredientCount} ingredient{ingredientCount !== 1 ? 's' : ''}
             </span>
@@ -55,7 +57,7 @@ export default function NavBar({ view, onNavigate, ingredientCount, savedCount }
             <button
               type="button"
               onClick={() => onNavigate('saved')}
-              className="relative grid h-9 w-9 place-items-center rounded-lg text-bark-light/60 hover:bg-cream hover:text-forest transition"
+              className="relative grid h-9 w-9 place-items-center rounded-lg text-bark-light/60 transition-all duration-150 hover:bg-cream hover:text-forest hover:scale-105"
               aria-label="Saved recipes"
             >
               <HeartFilled size={18} />
@@ -64,10 +66,7 @@ export default function NavBar({ view, onNavigate, ingredientCount, savedCount }
               </span>
             </button>
           )}
-          <div
-            className="grid h-9 w-9 place-items-center rounded-lg bg-forest/10 text-xs font-black text-forest"
-            aria-label="User"
-          >
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-forest/10 text-xs font-black text-forest transition-all duration-150 hover:bg-forest/20 hover:scale-105 cursor-default">
             NS
           </div>
         </div>

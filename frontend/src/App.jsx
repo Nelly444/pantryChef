@@ -1,9 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import CookingMode from './components/CookingMode.jsx'
 import EmptyState from './components/EmptyState.jsx'
 import FilterBar from './components/FilterBar.jsx'
 import Footer from './components/Footer.jsx'
+import GroceryListView from './components/GroceryListView.jsx'
 import HeroSection from './components/HeroSection.jsx'
+import MealPlanView from './components/MealPlanView.jsx'
 import NavBar from './components/NavBar.jsx'
 import PantryView from './components/PantryView.jsx'
 import RecipeCard from './components/RecipeCard.jsx'
@@ -17,6 +19,13 @@ import { Bowl, Leaf, Search, Sprout } from './components/Icons.jsx'
 import { suggestRecipes } from './lib/api.js'
 import { useFavorites } from './hooks/useFavorites.js'
 
+const EXP_KEY = 'pantry-expirations'
+
+function loadExpirations() {
+  try { return JSON.parse(localStorage.getItem(EXP_KEY) || '{}') }
+  catch { return {} }
+}
+
 export default function App() {
   const [view, setView]                       = useState('home')
   const [ingredientsList, setIngredientsList] = useState([])
@@ -27,7 +36,12 @@ export default function App() {
   const [activeFilter, setActiveFilter]       = useState('all')
   const [selectedResult, setSelectedResult]   = useState(null)
   const [cookingSteps, setCookingSteps]       = useState([])
+  const [expirations, setExpirations]         = useState(loadExpirations)
   const { favs, toggle: toggleFav, isFav }    = useFavorites()
+
+  useEffect(() => {
+    localStorage.setItem(EXP_KEY, JSON.stringify(expirations))
+  }, [expirations])
 
   const navigate = (target) => { setView(target); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
@@ -38,7 +52,25 @@ export default function App() {
     return true
   }, [ingredientsList])
 
-  const removeIngredient = useCallback((item) => setIngredientsList(prev => prev.filter(x => x !== item)), [])
+  const removeIngredient = useCallback((item) => {
+    setIngredientsList(prev => prev.filter(x => x !== item))
+    setExpirations(prev => {
+      const next = { ...prev }
+      delete next[item.toLowerCase()]
+      return next
+    })
+  }, [])
+
+  const setExpiry = useCallback((item, date) => {
+    setExpirations(prev => {
+      if (!date) {
+        const next = { ...prev }
+        delete next[item.toLowerCase()]
+        return next
+      }
+      return { ...prev, [item.toLowerCase()]: date }
+    })
+  }, [])
 
   const handleSearch = useCallback(async ({ meal, dietary }) => {
     setError('')
@@ -85,7 +117,7 @@ export default function App() {
       <main className="flex-1">
 
         {view === 'home' && (
-          <>
+          <div className="view-enter">
             <HeroSection
               ingredientsList={ingredientsList}
               onAdd={addIngredient}
@@ -182,17 +214,37 @@ export default function App() {
               )}
 
             </div>
-          </>
+          </div>
         )}
 
         {view === 'pantry' && (
-          <PantryView ingredientsList={ingredientsList} onRemove={removeIngredient}
-            onClear={() => setIngredientsList([])} onNavigateHome={() => navigate('home')} />
+          <div className="view-enter"><PantryView
+            ingredientsList={ingredientsList}
+            expirations={expirations}
+            onRemove={removeIngredient}
+            onClear={() => setIngredientsList([])}
+            onSetExpiry={setExpiry}
+            onNavigateHome={() => navigate('home')}
+          /></div>
         )}
 
         {view === 'saved' && (
-          <SavedView favs={favs} isFav={isFav} onToggleFav={toggleFav}
-            onSelect={setSelectedResult} onNavigateHome={() => navigate('home')} />
+          <div className="view-enter">
+            <SavedView favs={favs} isFav={isFav} onToggleFav={toggleFav}
+              onSelect={setSelectedResult} onNavigateHome={() => navigate('home')} />
+          </div>
+        )}
+
+        {view === 'plan' && (
+          <div className="view-enter">
+            <MealPlanView results={results} favs={favs} expirations={expirations} />
+          </div>
+        )}
+
+        {view === 'grocery' && (
+          <div className="view-enter">
+            <GroceryListView onNavigateHome={() => navigate('home')} />
+          </div>
         )}
 
       </main>

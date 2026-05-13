@@ -1,11 +1,14 @@
 import { cn } from '../../lib/utils.js'
 
 /**
- * ShineBorder — animated gradient border via background + padding trick.
+ * ShineBorder — a bright arc of light that rotates clockwise around the border.
  *
- * Outer div: animated radial gradient background, padding = borderWidth.
- * Inner div: solid white, slightly smaller border-radius.
- * The gradient peeks through only in the padding band → border-only glow.
+ * Technique:
+ *   Outer div: conic-gradient background + padding = borderWidth px.
+ *   Inner div: solid white, so the gradient is only visible in the padding band.
+ *   @property --shine-angle lets the browser interpolate the angle smoothly,
+ *   making the conic-gradient appear to spin. Without @property, custom
+ *   property animation would snap instead of sweep.
  */
 export default function ShineBorder({
   borderRadius = 24,
@@ -15,20 +18,21 @@ export default function ShineBorder({
   className,
   children,
 }) {
-  const gradient = Array.isArray(color)
-    ? `radial-gradient(transparent, transparent, ${color.join(', ')}, transparent, transparent)`
-    : `radial-gradient(transparent, transparent, ${color}, transparent, transparent)`
+  const [c1, c2, c3] = Array.isArray(color)
+    ? [color[0], color[1] ?? color[0], color[2] ?? color[1] ?? color[0]]
+    : [color, color, color]
 
   return (
     <div
+      className={cn('shine-border relative', className)}
       style={{
+        '--shine-c1': c1,
+        '--shine-c2': c2,
+        '--shine-c3': c3,
+        '--shine-duration': `${duration}s`,
         borderRadius: `${borderRadius}px`,
         padding: `${borderWidth}px`,
-        backgroundImage: gradient,
-        backgroundSize: '300% 300%',
-        animation: `shine-pulse ${duration}s infinite linear`,
       }}
-      className={cn('relative', className)}
     >
       <div
         style={{ borderRadius: `${borderRadius - borderWidth}px` }}

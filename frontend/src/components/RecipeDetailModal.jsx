@@ -102,7 +102,7 @@ export default function RecipeDetailModal({ result, serving, isFav, onToggleFav,
               </h2>
               <button
                 type="button"
-                onClick={() => onToggleFav(recipe, match_percentage)}
+                onClick={() => onToggleFav(result)}
                 className="shrink-0 grid h-10 w-10 place-items-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
                 aria-label={isFav ? 'Remove from saved' : 'Save recipe'}
               >
