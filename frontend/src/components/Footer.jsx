@@ -37,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 border-t border-olive/15 pt-6 text-center text-xs text-cream/25">
-          &copy; {new Date().getFullYear()} PantryChef. A portfolio project.
+          &copy; {new Date().getFullYear()} PantryChef.
         </div>
 
       </div>
