@@ -42,6 +42,15 @@ def find_top_matches(
     return scored[:limit]
 
 
+def missing_ingredients(recipe: dict, pantry: set) -> list[str]:
+    """Return ingredient names from a recipe that are not in the pantry."""
+    return [
+        ing.get("name", "")
+        for ing in recipe.get("extendedIngredients", [])
+        if ing.get("name", "").lower() not in pantry
+    ]
+
+
 def calculate_nutrition(recipe: dict, servings: int) -> dict:
     """Scale nutrients by the requested serving count."""
     nutrients = recipe.get("nutrition", {}).get("nutrients", [])

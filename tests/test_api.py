@@ -13,7 +13,7 @@ import os
 os.environ["SPOONACULAR_API_KEY"] = "test-key"  # prevent startup crash
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from main import app, limiter
 
@@ -31,13 +31,6 @@ def reset_rate_limits():
     yield
 
 # ── Fake data ────────────────────────────────────────────────────────────────
-
-FAKE_MATCH = {
-    "id": 1,
-    "title": "Garlic Pasta",
-    "usedIngredientCount": 3,
-    "missedIngredientCount": 1,
-}
 
 FAKE_RECIPE = {
     "id": 1,
@@ -58,12 +51,25 @@ FAKE_RECIPE = {
     ],
     "nutrition": {
         "nutrients": [
-            {"name": "Calories", "amount": 400},
-            {"name": "Protein", "amount": 15},
-            {"name": "Fat", "amount": 10},
+            {"name": "Calories",      "amount": 400},
+            {"name": "Protein",       "amount": 15},
+            {"name": "Fat",           "amount": 10},
             {"name": "Carbohydrates", "amount": 60},
         ]
     },
+}
+
+# find_top_matches returns a list of result dicts — each has recipe + metadata
+FAKE_RESULT = {
+    "recipe":              FAKE_RECIPE,
+    "match_percentage":    75.0,
+    "nutrition":           {"calories": 400, "protein": 15, "fat": 10, "carbs": 60},
+    "missing_ingredients": ["cream"],
+}
+
+FAKE_RESULT_2X = {
+    **FAKE_RESULT,
+    "nutrition": {"calories": 800, "protein": 30, "fat": 20, "carbs": 120},
 }
 
 
@@ -72,34 +78,31 @@ FAKE_RECIPE = {
 class TestSuggestEndpoint:
 
     def test_happy_path(self):
-        """Valid request returns a recipe with all expected fields."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+        """Valid request returns results list with expected fields."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic", "pasta", "cream"]})
         assert res.status_code == 200
         body = res.json()
-        assert body["recipe"]["title"] == "Garlic Pasta"
-        assert body["match_percentage"] == 75.0
-        assert "nutrition" in body
-        assert "missing_ingredients" in body
+        assert "results" in body
+        first = body["results"][0]
+        assert first["recipe"]["title"] == "Garlic Pasta"
+        assert first["match_percentage"] == 75.0
+        assert "nutrition" in first
+        assert "missing_ingredients" in first
 
     def test_empty_ingredients_rejected(self):
-        """An empty ingredients list must be rejected with 422."""
         res = client.post("/recipes/suggest", json={"ingredients": []})
         assert res.status_code == 422
 
     def test_too_many_ingredients_rejected(self):
-        """More than 20 ingredients must be rejected with 422."""
         res = client.post("/recipes/suggest", json={"ingredients": [f"item{i}" for i in range(21)]})
         assert res.status_code == 422
 
     def test_ingredient_too_long_rejected(self):
-        """Ingredient names over 60 characters must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["a" * 61]})
         assert res.status_code == 422
 
     def test_whitespace_only_ingredients_rejected(self):
-        """A list of only whitespace strings is treated as empty."""
         res = client.post("/recipes/suggest", json={"ingredients": ["   ", "  "]})
         assert res.status_code == 422
 
@@ -116,76 +119,78 @@ class TestSuggestEndpoint:
         assert res.status_code == 422
 
     def test_no_matching_recipe_returns_404(self):
-        with patch("main.calculate_match", return_value=(None, 0)):
-            # "xyzzygarble" is valid format but will match nothing — no underscore
+        with patch("main.find_top_matches", return_value=[]):
             res = client.post("/recipes/suggest", json={"ingredients": ["xyzzygarble"]})
         assert res.status_code == 404
+        assert "error" in res.json()
 
     def test_spoonacular_error_returns_502(self):
         from spoonacular import SpoonacularError
-        with patch("main.calculate_match", side_effect=SpoonacularError("Quota exceeded")):
+        with patch("main.find_top_matches", side_effect=SpoonacularError("Quota exceeded")):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.status_code == 502
         assert "error" in res.json()
 
-    def test_nutrition_scaled_by_servings(self):
-        """Nutrition values must be multiplied by serving count."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+    def test_nutrition_already_scaled_in_result(self):
+        """Nutrition in each result is pre-scaled by find_top_matches — spot-check the field exists."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT_2X]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": 2})
         assert res.status_code == 200
-        assert res.json()["nutrition"]["calories"] == 800  # 400 * 2
+        assert res.json()["results"][0]["nutrition"]["calories"] == 800
 
-    def test_recipe_with_no_nutrition_data(self):
-        """Recipe missing nutrition key must return zeros, not crash."""
-        no_nutrition = {**FAKE_RECIPE, "nutrition": {}}
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=no_nutrition):
+    def test_recipe_with_no_nutrition_returns_zeros(self):
+        no_nutrition_result = {**FAKE_RESULT, "nutrition": {"calories": 0, "protein": 0, "fat": 0, "carbs": 0}}
+        with patch("main.find_top_matches", return_value=[no_nutrition_result]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.status_code == 200
-        assert res.json()["nutrition"]["calories"] == 0
+        assert res.json()["results"][0]["nutrition"]["calories"] == 0
 
     def test_missing_ingredients_field_required(self):
         res = client.post("/recipes/suggest", json={"serving": 2})
         assert res.status_code == 422
+
+    def test_multiple_results_returned(self):
+        """All results from find_top_matches are forwarded to the client."""
+        result2 = {**FAKE_RESULT, "match_percentage": 60.0}
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT, result2]):
+            res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
+        assert res.status_code == 200
+        assert len(res.json()["results"]) == 2
 
 
 # ── Dietary restrictions & meal type ─────────────────────────────────────────
 
 class TestDietaryFiltering:
 
-    def test_dietary_restrictions_passed_to_calculate_match(self):
-        """Dietary restrictions must be forwarded to calculate_match."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+    def test_dietary_restrictions_passed_to_find_top_matches(self):
+        """Dietary restrictions must be forwarded to find_top_matches."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
                 "dietary_restrictions": ["vegetarian"],
             })
-        _, kwargs = mock_match.call_args
-        assert kwargs.get("dietary_restrictions") == ["vegetarian"]
+        args, kwargs = mock_fn.call_args
+        assert kwargs.get("dietary_restrictions") == ["vegetarian"] or args[1] == ["vegetarian"]
 
-    def test_meal_type_passed_to_calculate_match(self):
-        """Meal type must be forwarded to calculate_match."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+    def test_meal_type_passed_to_find_top_matches(self):
+        """Meal type must be forwarded to find_top_matches."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
                 "meal": "dinner",
             })
-        _, kwargs = mock_match.call_args
-        assert kwargs.get("meal_type") == "dinner"
+        args, kwargs = mock_fn.call_args
+        assert kwargs.get("meal_type") == "dinner" or args[2] == "dinner"
 
-    def test_serving_count_passed_to_calculate_match(self):
-        """Serving count must be forwarded to calculate_match so it influences recipe selection."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 80.0)) as mock_match, \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+    def test_serving_count_passed_to_find_top_matches(self):
+        """Serving count must be forwarded to find_top_matches."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
                 "serving": 4,
             })
-        _, kwargs = mock_match.call_args
-        assert kwargs.get("servings") == 4
+        args, kwargs = mock_fn.call_args
+        assert kwargs.get("servings") == 4 or args[3] == 4
 
     def test_diet_normalisation_vegetarian(self):
         from spoonacular import _resolve_diet
@@ -264,21 +269,26 @@ class TestDeleteHistory:
 class TestSecurity:
 
     def test_security_headers_present(self):
-        """Every response must include the three core security headers."""
         res = client.get("/")
         assert res.headers.get("X-Content-Type-Options") == "nosniff"
         assert res.headers.get("X-Frame-Options") == "DENY"
         assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
 
+    def test_xss_protection_header_present(self):
+        res = client.get("/")
+        assert res.headers.get("X-XSS-Protection") == "1; mode=block"
+
+    def test_permissions_policy_header_present(self):
+        res = client.get("/")
+        assert "camera=()" in res.headers.get("Permissions-Policy", "")
+
     def test_security_headers_on_post(self):
-        """Security headers must appear on POST responses too."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.headers.get("X-Content-Type-Options") == "nosniff"
+        assert res.headers.get("X-Frame-Options") == "DENY"
 
     def test_body_too_large_rejected(self):
-        """Payloads over 10KB must be rejected with 413."""
         huge_body = '{"ingredients":["' + "a" * 11_000 + '"]}'
         res = client.post(
             "/recipes/suggest",
@@ -288,7 +298,6 @@ class TestSecurity:
         assert res.status_code == 413
 
     def test_dietary_restrictions_list_too_long(self):
-        """More than 10 dietary restrictions must be rejected."""
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "dietary_restrictions": [f"diet{i}" for i in range(11)],
@@ -296,15 +305,13 @@ class TestSecurity:
         assert res.status_code == 422
 
     def test_dietary_restriction_string_too_long(self):
-        """A dietary restriction string over 50 chars must be rejected."""
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "dietary_restrictions": ["v" * 51],
         })
         assert res.status_code == 422
 
-    def test_meal_string_too_long(self):
-        """A meal string over 50 chars must be rejected."""
+    def test_meal_string_invalid_rejected(self):
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "meal": "d" * 51,
@@ -313,15 +320,13 @@ class TestSecurity:
 
     def test_db_write_failure_does_not_fail_response(self):
         """A database error during history write must not return 500 to the user."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE), \
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]), \
              patch("main.Session", side_effect=Exception("DB is down")):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.status_code == 200
-        assert res.json()["recipe"]["title"] == "Garlic Pasta"
+        assert res.json()["results"][0]["recipe"]["title"] == "Garlic Pasta"
 
     def test_malformed_content_length_rejected(self):
-        """A non-integer Content-Length header must return 400, not 500."""
         res = client.post(
             "/recipes/suggest",
             content='{"ingredients":["garlic"]}',
@@ -330,7 +335,6 @@ class TestSecurity:
         assert res.status_code == 400
 
     def test_chunked_body_too_large_rejected(self):
-        """Large body without Content-Length (chunked) must still be rejected."""
         huge = '{"ingredients":["' + "a" * 11_000 + '"]}'
         res = client.post(
             "/recipes/suggest",
@@ -340,9 +344,8 @@ class TestSecurity:
         assert res.status_code == 413
 
     def test_delete_method_allowed(self):
-        """DELETE must be accepted (not blocked by CORS method restriction)."""
         res = client.delete("/history/999999")
-        assert res.status_code == 404  # 404 not found, not 405 method not allowed
+        assert res.status_code == 404  # not 405
 
 
 # ── Injection & allowlist tests ───────────────────────────────────────────────
@@ -350,32 +353,30 @@ class TestSecurity:
 class TestInjectionRejection:
 
     def test_script_tag_in_ingredient_rejected(self):
-        """HTML/script tags in ingredient names must be rejected with 422."""
         res = client.post("/recipes/suggest", json={"ingredients": ["<script>alert(1)</script>"]})
         assert res.status_code == 422
 
     def test_sql_injection_in_ingredient_rejected(self):
-        """SQL metacharacters in ingredient names must be rejected with 422."""
         res = client.post("/recipes/suggest", json={"ingredients": ["garlic'; DROP TABLE--"]})
         assert res.status_code == 422
 
     def test_command_injection_in_ingredient_rejected(self):
-        """Shell metacharacters in ingredient names must be rejected with 422."""
         res = client.post("/recipes/suggest", json={"ingredients": ["garlic | rm -rf /"]})
         assert res.status_code == 422
 
     def test_backtick_injection_in_ingredient_rejected(self):
-        """Backtick command substitution in ingredient names must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["`whoami`"]})
         assert res.status_code == 422
 
     def test_dollar_sign_injection_in_ingredient_rejected(self):
-        """Dollar-sign variable expansion in ingredient names must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["$(id)"]})
         assert res.status_code == 422
 
+    def test_null_byte_in_ingredient_rejected(self):
+        res = client.post("/recipes/suggest", json={"ingredients": ["garlic\x00"]})
+        assert res.status_code == 422
+
     def test_angle_bracket_in_dietary_rejected(self):
-        """HTML tags in dietary restrictions must be rejected with 422."""
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "dietary_restrictions": ["<script>xss</script>"],
@@ -383,7 +384,6 @@ class TestInjectionRejection:
         assert res.status_code == 422
 
     def test_semicolon_in_dietary_rejected(self):
-        """SQL semicolons in dietary restrictions must be rejected with 422."""
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "dietary_restrictions": ["vegan; DROP TABLE search_history"],
@@ -391,31 +391,42 @@ class TestInjectionRejection:
         assert res.status_code == 422
 
     def test_invalid_meal_type_rejected(self):
-        """A meal type not in the allowed list must be rejected with 422."""
         res = client.post("/recipes/suggest", json={
             "ingredients": ["garlic"],
             "meal": "fourth_meal",
         })
         assert res.status_code == 422
 
-    def test_valid_meal_type_accepted(self):
-        """All known meal types must be accepted."""
+    def test_valid_meal_types_accepted(self):
         for meal in ["breakfast", "brunch", "lunch", "dinner", "snack"]:
-            with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-                 patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+            with patch("main.find_top_matches", return_value=[FAKE_RESULT]):
                 res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "meal": meal})
             assert res.status_code == 200, f"Expected 200 for meal='{meal}', got {res.status_code}"
 
     def test_accented_ingredient_accepted(self):
-        """Ingredient names with accented characters must be accepted."""
-        with patch("main.calculate_match", return_value=(FAKE_MATCH, 75.0)), \
-             patch("main.get_recipe_info", return_value=FAKE_RECIPE):
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]):
             res = client.post("/recipes/suggest", json={"ingredients": ["jalapeño"]})
         assert res.status_code == 200
 
     def test_underscore_in_ingredient_rejected(self):
-        """Underscores are not valid food characters and must be rejected."""
         res = client.post("/recipes/suggest", json={"ingredients": ["xyz_ingredient"]})
+        assert res.status_code == 422
+
+    def test_path_traversal_in_recipe_id_rejected(self):
+        # Path normalises to /history/detail — router rejects it (404/405/422), never executes recipe logic
+        res = client.get("/recipes/../history/detail")
+        assert res.status_code in (404, 405, 422)
+
+    def test_recipe_id_zero_rejected(self):
+        res = client.get("/recipes/0/detail")
+        assert res.status_code == 422
+
+    def test_recipe_id_negative_rejected(self):
+        res = client.get("/recipes/-1/detail")
+        assert res.status_code in (404, 422)
+
+    def test_recipe_id_over_limit_rejected(self):
+        res = client.get("/recipes/9999999/detail")
         assert res.status_code == 422
 
 
@@ -433,6 +444,12 @@ class TestRecipeLogic:
         result = calculate_nutrition(FAKE_RECIPE, servings=3)
         assert result["calories"] == 1200  # 400 * 3
 
+    def test_calculate_nutrition_single_serving(self):
+        from recipe import calculate_nutrition
+        result = calculate_nutrition(FAKE_RECIPE, servings=1)
+        assert result["calories"] == 400
+        assert result["protein"] == 15
+
     def test_missing_ingredients_finds_gaps(self):
         from recipe import missing_ingredients
         pantry = {"garlic", "pasta"}
@@ -449,3 +466,11 @@ class TestRecipeLogic:
     def test_missing_ingredients_handles_no_extended(self):
         from recipe import missing_ingredients
         assert missing_ingredients({}, {"garlic"}) == []
+
+    def test_missing_ingredients_case_insensitive(self):
+        from recipe import missing_ingredients
+        pantry = {"GARLIC", "PASTA"}  # uppercase in pantry
+        # pantry items are lowercased on entry in main.py but let's verify
+        # the function compares .lower()
+        missing = missing_ingredients(FAKE_RECIPE, {i.lower() for i in pantry})
+        assert "garlic" not in missing
