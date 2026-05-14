@@ -41,29 +41,19 @@ export function useMealPlan() {
 
   const clear = () => setPlan(empty())
 
-  const generate = (results, expirations = {}) => {
+  const generate = (results) => {
     if (!results.length) return
-    // Score: match % + bonus for soon-to-expire items
-    const scored = results.map(r => {
-      const urgencyBonus = (r.recipe.usedIngredients ?? []).reduce((sum, ing) => {
-        const name = ing.name?.toLowerCase() ?? ''
-        const date = expirations[name]
-        if (!date) return sum
-        const days = Math.ceil((new Date(date) - Date.now()) / 86_400_000)
-        return sum + (days <= 3 ? 20 : days <= 7 ? 10 : 0)
-      }, 0)
-      return { result: r, score: r.match_percentage + urgencyBonus }
-    })
-    scored.sort((a, b) => b.score - a.score)
+    // Results arrive pre-sorted by the backend (match % + urgency bonus).
+    // Assign using a per-meal-type offset so the same recipe doesn't appear
+    // as Breakfast, Lunch, AND Dinner on the same day.
+    const autoTypes = ['Breakfast', 'Lunch', 'Dinner']
+    const n = results.length
+    const offset = Math.max(1, Math.floor(n / autoTypes.length))
 
     const newPlan = empty()
-    let idx = 0
-    // Fill Breakfast, Lunch, Dinner for every day; leave Brunch and Snack empty
-    const autoTypes = ['Breakfast', 'Lunch', 'Dinner']
-    DAYS.forEach(day => {
-      autoTypes.forEach(mealType => {
-        newPlan[day][mealType] = scored[idx % scored.length].result
-        idx++
+    autoTypes.forEach((mealType, mi) => {
+      DAYS.forEach((day, di) => {
+        newPlan[day][mealType] = results[(di + mi * offset) % n]
       })
     })
     setPlan(newPlan)

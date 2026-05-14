@@ -103,11 +103,14 @@ _INGREDIENT_RE = re.compile(r"^[a-zA-Z\xc0-\xff0-9][a-zA-Z\xc0-\xff0-9 '\-.,()/%
 _DIET_RE       = re.compile(r"^[a-zA-Z\xc0-\xff][a-zA-Z\xc0-\xff \-]*$")
 _VALID_MEALS   = Literal['breakfast','brunch','lunch','dinner','snack','appetizer','dessert','soup','salad']
 
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
 class RecipeRequest(BaseModel):
-    ingredients:          list[str]       = Field(min_length=1, max_length=20)
-    dietary_restrictions: list[str] | None = Field(default=None, max_length=10)
-    meal:                 _VALID_MEALS | None = None
-    serving:              int             = Field(default=1, ge=1, le=20)
+    ingredients:          list[str]            = Field(min_length=1, max_length=20)
+    dietary_restrictions: list[str] | None      = Field(default=None, max_length=10)
+    meal:                 _VALID_MEALS | None   = None
+    serving:              int                   = Field(default=1, ge=1, le=20)
+    expirations:          dict[str, str] | None = None  # ingredient → YYYY-MM-DD
 
     @field_validator("ingredients")
     @classmethod
@@ -139,6 +142,23 @@ class RecipeRequest(BaseModel):
             cleaned.append(item)
         return cleaned
 
+    @field_validator("expirations")
+    @classmethod
+    def clean_expirations(cls, v):
+        if not v:
+            return None
+        cleaned = {}
+        for raw_key, raw_val in list(v.items())[:50]:   # cap at 50 entries
+            key = str(raw_key).strip().lower()
+            val = str(raw_val).strip()
+            # Silently drop malformed entries — attacker gets no feedback
+            if not key or len(key) > 60 or not _INGREDIENT_RE.match(key):
+                continue
+            if not _DATE_RE.match(val):
+                continue
+            cleaned[key] = val
+        return cleaned or None
+
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -151,7 +171,7 @@ def home():
 def suggest_recipes(request: Request, body: RecipeRequest):
     pantry = set(i.strip().lower() for i in body.ingredients)
     try:
-        results = find_top_matches(pantry, body.dietary_restrictions, body.meal, body.serving)
+        results = find_top_matches(pantry, body.dietary_restrictions, body.meal, body.serving, body.expirations)
     except SpoonacularError as e:
         return JSONResponse(status_code=502, content={"error": str(e)})
 

@@ -169,7 +169,7 @@ export default function MealPlanView({ results, favs, expirations }) {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => generate(results, expirations)}
+            onClick={() => generate(results)}
             disabled={results.length === 0}
             className="btn-shimmer inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
             style={{ backgroundImage: 'linear-gradient(90deg, #3d5c2e 0%, #5c7a42 50%, #3d5c2e 100%)' }}

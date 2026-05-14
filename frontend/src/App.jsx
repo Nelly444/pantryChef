@@ -83,6 +83,7 @@ export default function App() {
         serving: Math.max(1, Math.min(20, serving)),
         meal,
         dietary_restrictions: dietary,
+        expirations: Object.keys(expirations).length ? expirations : undefined,
       })
       setResults(data.results ?? [])
     } catch (err) {

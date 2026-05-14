@@ -26,11 +26,13 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
   const handleSubmit = (e) => {
     e?.preventDefault()
     if (ingredientsList.length === 0) { setInputHint('Add at least one ingredient first.'); return }
-    const dietary = dietaryText
-      .split(',')
-      .map(s => s.trim())
-      .filter(s => s && validateDietTerm(s) === null)
-    onSearch({ meal: meal || null, dietary: dietary.length ? dietary : null })
+    const terms = dietaryText.split(',').map(s => s.trim()).filter(Boolean)
+    const valid = terms.filter(s => validateDietTerm(s) === null)
+    const invalid = terms.filter(s => validateDietTerm(s) !== null)
+    if (invalid.length) {
+      setInputHint(`Ignored unrecognised dietary terms: ${invalid.join(', ')}`)
+    }
+    onSearch({ meal: meal || null, dietary: valid.length ? valid : null })
   }
 
   return (
@@ -134,7 +136,7 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
             </div>
             <div>
               <label htmlFor="dietary" className="mb-1 block text-[10px] font-black uppercase tracking-widest text-bark-light/55">Dietary</label>
-              <input id="dietary" type="text" placeholder="vegetarian, gluten free…" maxLength={510}
+              <input id="dietary" type="text" placeholder="vegetarian, gluten free…" maxLength={200}
                 value={dietaryText} onChange={e => setDietaryText(e.target.value)} className={inputCls} />
             </div>
           </div>
