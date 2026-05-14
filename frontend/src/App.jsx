@@ -77,6 +77,8 @@ export default function App() {
     setResults([])
     setActiveFilter('all')
     setLoading(true)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30_000)
     try {
       const data = await suggestRecipes({
         ingredients: ingredientsList,
@@ -84,14 +86,19 @@ export default function App() {
         meal,
         dietary_restrictions: dietary,
         expirations: Object.keys(expirations).length ? expirations : undefined,
-      })
+      }, controller.signal)
       setResults(data.results ?? [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Check your connection and try again.')
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong.')
+      }
     } finally {
+      clearTimeout(timeout)
       setLoading(false)
     }
-  }, [ingredientsList, serving])
+  }, [ingredientsList, serving, expirations])
 
   const bestMatch   = results.length ? Math.max(...results.map(r => r.match_percentage)) : 0
   const avgCalories = useMemo(() => {

@@ -22,11 +22,12 @@ async function apiFetch(url, options = {}) {
 }
 
 // POST /recipes/suggest → { results: [...] }
-export async function suggestRecipes(body) {
+export async function suggestRecipes(body, signal) {
   return apiFetch(`${API_BASE}/recipes/suggest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   })
 }
 
