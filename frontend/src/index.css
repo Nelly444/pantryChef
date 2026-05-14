@@ -28,9 +28,6 @@
 }
 
 /* ── ShineBorder — conic gradient rotating around the border ─────────────── */
-/* @property lets us animate --shine-angle as a real <angle>, enabling smooth  */
-/* conic-gradient rotation. Without it, browsers can't interpolate angles in   */
-/* custom properties and the animation would jump frame-to-frame.              */
 
 @property --shine-angle {
   syntax: '<angle>';
