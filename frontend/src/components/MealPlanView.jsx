@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { useMealPlan, DAY_SHORT } from '../hooks/useMealPlan.js'
 import { Zap, X, Bowl, Flame, Clock } from './Icons.jsx'
 
+const VISIBLE_KEY = 'pantry-meal-types-visible'
+
+// Generate Smart Plan only fills Breakfast/Lunch/Dinner, so default those on
+const DEFAULT_VISIBLE = { Breakfast: true, Brunch: false, Lunch: true, Dinner: true, Snack: false }
+
+function loadVisible() {
+  try { return { ...DEFAULT_VISIBLE, ...JSON.parse(localStorage.getItem(VISIBLE_KEY) || '{}') } }
+  catch { return DEFAULT_VISIBLE }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getWeekDates() {
@@ -144,6 +154,17 @@ function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions }) 
 export default function MealPlanView({ results, favs, expirations }) {
   const { plan, DAYS, DAY_SHORT, MEAL_TYPES, assign, remove, clear, generate, plannedCount, uniqueMissing } = useMealPlan()
   const weekDates = getWeekDates()
+  const [visible, setVisible] = useState(loadVisible)
+
+  const toggleMealType = (type) => {
+    setVisible(prev => {
+      const next = { ...prev, [type]: !prev[type] }
+      try { localStorage.setItem(VISIBLE_KEY, JSON.stringify(next)) } catch {}
+      return next
+    })
+  }
+
+  const activeMealTypes = MEAL_TYPES.filter(m => visible[m])
 
   const favResults = favs.map(f => ({
     recipe: f,
@@ -191,6 +212,25 @@ export default function MealPlanView({ results, favs, expirations }) {
         </div>
       )}
 
+      {/* Meal type toggles */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] font-black uppercase tracking-widest text-bark-light/40">Show:</span>
+        {MEAL_TYPES.map(type => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => toggleMealType(type)}
+            className={`rounded-full border px-3 py-1 text-xs font-bold transition-all duration-150 hover:-translate-y-0.5 ${
+              visible[type]
+                ? 'border-forest bg-forest text-white shadow-sm'
+                : 'border-olive/30 bg-white text-bark-light/50 hover:border-forest/40 hover:text-bark'
+            }`}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+
       {/* Calendar grid */}
       <div className="overflow-x-auto pb-2">
         <div className="min-w-[780px]">
@@ -217,8 +257,8 @@ export default function MealPlanView({ results, favs, expirations }) {
             })}
           </div>
 
-          {/* Meal type rows */}
-          {MEAL_TYPES.map(mealType => (
+          {/* Meal type rows — only render active types */}
+          {activeMealTypes.map(mealType => (
             <div key={mealType} className="mb-2 flex gap-2">
               {/* Meal type label */}
               <div className="flex w-[88px] shrink-0 items-center">
