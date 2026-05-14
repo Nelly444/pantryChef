@@ -13,11 +13,16 @@ function empty() {
 }
 
 function migrate(raw) {
-  // If the saved plan uses the old flat structure (day → result instead of day → mealType → result),
-  // discard it and start fresh rather than crashing.
-  const first = Object.values(raw)[0]
-  if (first && (first.recipe || first.match_percentage)) return empty()
-  return { ...empty(), ...raw }
+  const base = empty()
+  for (const [day, val] of Object.entries(raw)) {
+    if (!DAYS.includes(day)) continue
+    // Only carry over values that look like the new nested format { mealType: result }
+    // Skip nulls, old flat result objects, and anything unexpected
+    if (val && typeof val === 'object' && !Array.isArray(val) && !val.recipe && !val.match_percentage) {
+      base[day] = { ...base[day], ...val }
+    }
+  }
+  return base
 }
 
 export function useMealPlan() {
@@ -64,7 +69,9 @@ export function useMealPlan() {
     setPlan(newPlan)
   }
 
-  const allSlots = Object.values(plan).flatMap(day => Object.values(day))
+  const allSlots = Object.values(plan).flatMap(day =>
+    day && typeof day === 'object' ? Object.values(day) : []
+  )
   const plannedCount = allSlots.filter(Boolean).length
 
   const missingAll = allSlots
