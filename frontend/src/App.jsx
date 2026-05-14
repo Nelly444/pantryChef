@@ -117,7 +117,7 @@ export default function App() {
   }, [results, activeFilter])
 
   return (
-    <div className="flex min-h-screen flex-col bg-cream">
+    <div className="linen flex min-h-screen flex-col">
       <TopProgress active={loading} />
 
       <NavBar view={view} onNavigate={navigate} ingredientCount={ingredientsList.length} savedCount={favs.length} />

@@ -10,21 +10,6 @@
   body {
     font-family: 'Lato', sans-serif;
     background-color: #ede6d0;
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(139, 109, 56, 0.055) 3px,
-        rgba(139, 109, 56, 0.055) 4px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent 3px,
-        rgba(139, 109, 56, 0.035) 3px,
-        rgba(139, 109, 56, 0.035) 4px
-      );
     color: #2c1f0e;
     -webkit-font-smoothing: antialiased;
   }
@@ -38,6 +23,27 @@
     outline: 2px solid #3d5c2e;
     outline-offset: 2px;
   }
+}
+
+/* ── Linen / paper texture ───────────────────────────────────────────────── */
+
+.linen {
+  background-color: #ede6d0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(139, 109, 56, 0.07) 3px,
+      rgba(139, 109, 56, 0.07) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(139, 109, 56, 0.045) 3px,
+      rgba(139, 109, 56, 0.045) 4px
+    );
 }
 
 /* ── ShineBorder — conic gradient rotating around the border ─────────────── */
