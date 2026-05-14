@@ -11,6 +11,13 @@ from pydantic import BaseModel, Field, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+
+
+def _get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return get_remote_address(request)
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
 from sqlalchemy.orm import declarative_base, Session
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -25,7 +32,7 @@ if not os.getenv("SPOONACULAR_API_KEY"):
 
 # ── Rate limiter & DB ─────────────────────────────────────────────────────────
 
-limiter  = Limiter(key_func=get_remote_address)
+limiter  = Limiter(key_func=_get_real_ip)
 _DB_PATH = os.path.join(os.path.dirname(__file__), "pantry.db")
 engine   = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
 Base     = declarative_base()
@@ -164,6 +171,11 @@ class RecipeRequest(BaseModel):
 @app.get("/")
 def home():
     return {"message": "PantryChef API is running."}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 @app.post("/recipes/suggest")

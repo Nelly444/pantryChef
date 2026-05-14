@@ -430,6 +430,97 @@ class TestInjectionRejection:
         assert res.status_code == 422
 
 
+# ── expirations field ────────────────────────────────────────────────────────
+
+class TestExpirations:
+
+    # find_top_matches signature: (pantry, dietary, meal, serving, expirations)
+    # positional index 4 = expirations
+
+    def test_expirations_accepted_and_forwarded(self):
+        """Valid expirations dict is passed through to find_top_matches."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
+            res = client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "expirations": {"garlic": "2026-12-01"},
+            })
+        assert res.status_code == 200
+        assert mock.call_args.args[4] == {"garlic": "2026-12-01"}
+
+    def test_urgency_bonus_present_in_response(self):
+        """Response includes urgency_bonus field on each result."""
+        result_with_urgency = {**FAKE_RESULT, "urgency_bonus": 20}
+        with patch("main.find_top_matches", return_value=[result_with_urgency]):
+            res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
+        assert res.status_code == 200
+        first = res.json()["results"][0]
+        assert "urgency_bonus" in first
+        assert first["urgency_bonus"] == 20
+
+    def test_invalid_expiration_date_silently_dropped(self):
+        """Malformed date strings are stripped; valid ones pass through."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
+            res = client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "expirations": {"garlic": "not-a-date", "pasta": "2026-12-01"},
+            })
+        assert res.status_code == 200
+        passed = mock.call_args.args[4]
+        assert passed is not None
+        assert "garlic" not in passed
+        assert passed.get("pasta") == "2026-12-01"
+
+    def test_injection_key_in_expirations_silently_dropped(self):
+        """Injection-attempt keys in expirations are stripped by the validator."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
+            res = client.post("/recipes/suggest", json={
+                "ingredients": ["garlic"],
+                "expirations": {"<script>alert(1)</script>": "2026-12-01", "garlic": "2026-12-01"},
+            })
+        assert res.status_code == 200
+        passed = mock.call_args.args[4]
+        assert "<script>alert(1)</script>" not in (passed or {})
+
+    def test_expirations_omitted_defaults_to_none(self):
+        """Omitting expirations field entirely passes None to find_top_matches."""
+        with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
+            res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
+        assert res.status_code == 200
+        assert mock.call_args.args[4] is None
+
+    def test_urgency_score_expired_ingredient(self):
+        """Already-expired ingredient gets maximum urgency score (30)."""
+        from recipe import _urgency_score
+        yesterday = "2020-01-01"  # definitely expired
+        assert _urgency_score("garlic", {"garlic": yesterday}) == 30
+
+    def test_urgency_score_expiring_in_2_days(self):
+        from recipe import _urgency_score
+        import datetime
+        soon = (datetime.date.today() + datetime.timedelta(days=2)).isoformat()
+        assert _urgency_score("garlic", {"garlic": soon}) == 20
+
+    def test_urgency_score_expiring_in_5_days(self):
+        from recipe import _urgency_score
+        import datetime
+        soon = (datetime.date.today() + datetime.timedelta(days=5)).isoformat()
+        assert _urgency_score("garlic", {"garlic": soon}) == 10
+
+    def test_urgency_score_not_expiring_soon(self):
+        from recipe import _urgency_score
+        import datetime
+        later = (datetime.date.today() + datetime.timedelta(days=30)).isoformat()
+        assert _urgency_score("garlic", {"garlic": later}) == 0
+
+    def test_urgency_score_unknown_ingredient(self):
+        from recipe import _urgency_score
+        assert _urgency_score("garlic", {}) == 0
+
+    def test_urgency_score_bad_date_returns_zero(self):
+        from recipe import _urgency_score
+        assert _urgency_score("garlic", {"garlic": "not-a-date"}) == 0
+
+
 # ── recipe.py unit tests ──────────────────────────────────────────────────────
 
 class TestRecipeLogic:

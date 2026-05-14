@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMealPlan } from '../hooks/useMealPlan.js'
 import EmptyState from './EmptyState.jsx'
 import { Bowl, Leaf } from './Icons.jsx'
@@ -19,20 +19,12 @@ function categorize(name) {
   return 'other'
 }
 
-const GROCERY_KEY = 'pantry-grocery-checked'
-
-function loadChecked() {
-  try { return new Set(JSON.parse(localStorage.getItem(GROCERY_KEY) || '[]')) }
-  catch { return new Set() }
-}
-
 export default function GroceryListView({ onNavigateHome }) {
   const { plan, DAYS, DAY_SHORT } = useMealPlan()
-  const [checked, setChecked] = useState(loadChecked)
-
-  useEffect(() => {
-    localStorage.setItem(GROCERY_KEY, JSON.stringify([...checked]))
-  }, [checked])
+  const [checked, setChecked] = useState(() => {
+    try { localStorage.removeItem('pantry-grocery-checked') } catch {}
+    return new Set()
+  })
 
   const toggle = (key) => {
     const next = new Set(checked)
