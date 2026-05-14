@@ -40,15 +40,19 @@ export default function GroceryListView({ onNavigateHome }) {
     setChecked(next)
   }
 
-  // Build ingredient → days map
+  // Build ingredient → days map (plan is now day → mealType → result)
   const itemDays = {}
   DAYS.forEach((day, i) => {
-    const result = plan[day]
-    if (!result) return
-    ;(result.missing_ingredients ?? []).forEach(raw => {
-      const key = raw.toLowerCase()
-      if (!itemDays[key]) itemDays[key] = { name: raw, days: [] }
-      itemDays[key].days.push(DAY_SHORT[i])
+    const daySlots = plan[day] ?? {}
+    Object.values(daySlots).forEach(result => {
+      if (!result) return
+      ;(result.missing_ingredients ?? []).forEach(raw => {
+        const key = raw.toLowerCase()
+        if (!itemDays[key]) itemDays[key] = { name: raw, days: [] }
+        if (!itemDays[key].days.includes(DAY_SHORT[i])) {
+          itemDays[key].days.push(DAY_SHORT[i])
+        }
+      })
     })
   })
 
@@ -58,7 +62,7 @@ export default function GroceryListView({ onNavigateHome }) {
   const isComplete = totalNeeded > 0 && totalChecked === totalNeeded
 
   if (totalNeeded === 0) {
-    const hasAnyPlan = DAYS.some(d => plan[d])
+    const hasAnyPlan = DAYS.some(d => Object.values(plan[d] ?? {}).some(Boolean))
     return (
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <h2 className="font-display mb-6 text-2xl font-black italic text-bark">Grocery List</h2>
