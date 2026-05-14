@@ -4,7 +4,16 @@ export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Sa
 export const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 export const MEAL_TYPES = ['Breakfast', 'Brunch', 'Lunch', 'Dinner', 'Snack']
 
-const KEY = 'pantry-meal-plan'
+const KEY      = 'pantry-meal-plan'
+const WEEK_KEY = 'pantry-meal-plan-week'
+
+function currentMondayISO() {
+  const d = new Date()
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  d.setDate(d.getDate() + diff)
+  return d.toISOString().slice(0, 10)
+}
 
 function empty() {
   return Object.fromEntries(
@@ -27,8 +36,16 @@ function migrate(raw) {
 
 export function useMealPlan() {
   const [plan, setPlan] = useState(() => {
-    try { return migrate(JSON.parse(localStorage.getItem(KEY) || '{}')) }
-    catch { return empty() }
+    try {
+      const thisWeek = currentMondayISO()
+      const savedWeek = localStorage.getItem(WEEK_KEY)
+      if (savedWeek !== thisWeek) {
+        localStorage.removeItem(KEY)
+        localStorage.setItem(WEEK_KEY, thisWeek)
+        return empty()
+      }
+      return migrate(JSON.parse(localStorage.getItem(KEY) || '{}'))
+    } catch { return empty() }
   })
 
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(plan)) }, [plan])
