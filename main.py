@@ -33,7 +33,8 @@ if not os.getenv("SPOONACULAR_API_KEY"):
 # ── Rate limiter & DB ─────────────────────────────────────────────────────────
 
 limiter  = Limiter(key_func=_get_real_ip)
-_DB_PATH = os.path.join(os.path.dirname(__file__), "pantry.db")
+# Use /tmp on serverless (Vercel); fall back to project dir locally
+_DB_PATH = os.path.join(os.getenv("VERCEL") and "/tmp" or os.path.dirname(__file__), "pantry.db")
 engine   = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
 Base     = declarative_base()
 
