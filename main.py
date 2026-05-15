@@ -47,7 +47,10 @@ class SearchHistory(Base):
     match_pct    = Column(Float)
     searched_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-Base.metadata.create_all(engine)
+try:
+    Base.metadata.create_all(engine)
+except Exception as e:
+    logger.warning("DB init skipped: %s", e)
 
 # ── App & middleware ──────────────────────────────────────────────────────────
 
