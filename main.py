@@ -1,8 +1,10 @@
 import os
 import re
+import json
+import hashlib
 import logging
 from typing import Literal
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from fastapi import FastAPI, Request, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,7 +24,7 @@ def _get_real_ip(request: Request) -> str:
         if _IP_RE.match(candidate):
             return candidate
     return get_remote_address(request)
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text
 from sqlalchemy.orm import declarative_base, Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -50,6 +52,40 @@ class SearchHistory(Base):
     recipe_id    = Column(Integer)
     match_pct    = Column(Float)
     searched_at  = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+class ResponseCache(Base):
+    __tablename__ = "response_cache"
+    cache_key  = Column(String(64), primary_key=True)
+    payload    = Column(Text, nullable=False)
+    cached_at  = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+
+
+def _cache_get(key: str) -> dict | list | None:
+    now = datetime.now(timezone.utc)
+    try:
+        with Session(engine) as s:
+            row = s.get(ResponseCache, key)
+            if row and row.expires_at.replace(tzinfo=timezone.utc) > now:
+                return json.loads(row.payload)
+    except Exception:
+        pass
+    return None
+
+
+def _cache_set(key: str, value: dict | list, ttl_hours: int = 24) -> None:
+    now = datetime.now(timezone.utc)
+    try:
+        with Session(engine) as s:
+            s.merge(ResponseCache(
+                cache_key=key,
+                payload=json.dumps(value),
+                cached_at=now,
+                expires_at=now + timedelta(hours=ttl_hours),
+            ))
+            s.commit()
+    except Exception as e:
+        logger.warning("Cache write failed: %s", e)
 
 try:
     Base.metadata.create_all(engine)
@@ -190,6 +226,18 @@ def health():
 @limiter.limit("10/minute")
 def suggest_recipes(request: Request, body: RecipeRequest):
     pantry = set(i.strip().lower() for i in body.ingredients)
+
+    cache_key = hashlib.sha256(json.dumps({
+        "i": sorted(pantry),
+        "d": sorted(body.dietary_restrictions or []),
+        "m": body.meal,
+        "s": body.serving,
+    }, sort_keys=True).encode()).hexdigest()
+
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        return {"results": cached, "cached": True}
+
     try:
         results = find_top_matches(pantry, body.dietary_restrictions, body.meal, body.serving, body.expirations)
     except SpoonacularError as e:
@@ -198,6 +246,8 @@ def suggest_recipes(request: Request, body: RecipeRequest):
 
     if not results:
         return JSONResponse(status_code=404, content={"error": "No matching recipes found."})
+
+    _cache_set(cache_key, results, ttl_hours=24)
 
     best = results[0]
     try:
@@ -222,11 +272,15 @@ def get_recipe_detail(
     recipe_id: int = Path(ge=1, le=1_000_000),
     serving:   int = Query(default=1, ge=1, le=20),
 ):
-    try:
-        recipe_info = get_recipe_info(recipe_id)
-    except SpoonacularError as e:
-        logger.error("Spoonacular error on detail %s: %s", recipe_id, e)
-        return JSONResponse(status_code=502, content={"error": "Recipe service temporarily unavailable. Please try again."})
+    detail_key = f"detail:{recipe_id}"
+    recipe_info = _cache_get(detail_key)
+    if recipe_info is None:
+        try:
+            recipe_info = get_recipe_info(recipe_id)
+        except SpoonacularError as e:
+            logger.error("Spoonacular error on detail %s: %s", recipe_id, e)
+            return JSONResponse(status_code=502, content={"error": "Recipe service temporarily unavailable. Please try again."})
+        _cache_set(detail_key, recipe_info, ttl_hours=168)  # 7 days
     return {"recipe": recipe_info, "nutrition": calculate_nutrition(recipe_info, serving)}
 
 
