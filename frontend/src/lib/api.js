@@ -21,9 +21,9 @@ async function apiFetch(url, options = {}) {
   return data
 }
 
-// POST /recipes/suggest → { results: [...] }
+// POST /api/recipes/suggest → { results: [...] }
 export async function suggestRecipes(body, signal) {
-  return apiFetch(`${API_BASE}/recipes/suggest`, {
+  return apiFetch(`${API_BASE}/api/recipes/suggest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -31,7 +31,7 @@ export async function suggestRecipes(body, signal) {
   })
 }
 
-// GET /recipes/:id/detail → { recipe, nutrition }
+// GET /api/recipes/:id/detail → { recipe, nutrition }
 export async function getRecipeDetail(recipeId, serving = 1) {
-  return apiFetch(`${API_BASE}/recipes/${recipeId}/detail?serving=${serving}`)
+  return apiFetch(`${API_BASE}/api/recipes/${recipeId}/detail?serving=${serving}`)
 }

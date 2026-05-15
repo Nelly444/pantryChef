@@ -168,17 +168,17 @@ class RecipeRequest(BaseModel):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
-@app.get("/")
+@app.get("/api")
 def home():
     return {"message": "PantryChef API is running."}
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health():
     return {"status": "ok"}
 
 
-@app.post("/recipes/suggest")
+@app.post("/api/recipes/suggest")
 @limiter.limit("10/minute")
 def suggest_recipes(request: Request, body: RecipeRequest):
     pantry = set(i.strip().lower() for i in body.ingredients)
@@ -207,7 +207,7 @@ def suggest_recipes(request: Request, body: RecipeRequest):
     return {"results": results}
 
 
-@app.get("/recipes/{recipe_id}/detail")
+@app.get("/api/recipes/{recipe_id}/detail")
 @limiter.limit("20/minute")
 def get_recipe_detail(
     request: Request,
@@ -222,7 +222,7 @@ def get_recipe_detail(
     return {"recipe": recipe_info, "nutrition": calculate_nutrition(recipe_info, serving)}
 
 
-@app.get("/history")
+@app.get("/api/history")
 @limiter.limit("30/minute")
 def get_history(request: Request, limit: int = Query(default=20, ge=1, le=50)):
     with Session(engine) as s:
@@ -235,7 +235,7 @@ def get_history(request: Request, limit: int = Query(default=20, ge=1, le=50)):
         ]
 
 
-@app.delete("/history/{entry_id}")
+@app.delete("/api/history/{entry_id}")
 @limiter.limit("30/minute")
 def delete_history_entry(request: Request, entry_id: int):
     with Session(engine) as s:
