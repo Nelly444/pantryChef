@@ -89,8 +89,8 @@ function RecipePicker({ options, onPick, onClose }) {
 
 // ── Single meal slot cell ─────────────────────────────────────────────────────
 
-function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions }) {
-  const [showPicker, setShowPicker] = useState(false)
+function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions, openKey, onOpen, onClose }) {
+  const isOpen = openKey === `${day}__${mealType}`
 
   const matchColor =
     !result ? '' :
@@ -131,18 +131,18 @@ function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions }) 
       ) : (
         <button
           type="button"
-          onClick={() => setShowPicker(true)}
+          onClick={() => onOpen(`${day}__${mealType}`)}
           className="flex h-[4.5rem] w-full items-center justify-center rounded-xl border-2 border-dashed border-olive/25 bg-white/40 text-bark-light/30 transition hover:border-forest/40 hover:bg-white/70 hover:text-forest"
         >
           <span className="text-xl font-thin leading-none">+</span>
         </button>
       )}
 
-      {showPicker && (
+      {isOpen && (
         <RecipePicker
           options={pickerOptions}
           onPick={r => onAssign(day, mealType, r)}
-          onClose={() => setShowPicker(false)}
+          onClose={onClose}
         />
       )}
     </div>
@@ -156,6 +156,7 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
   const MEAL_TYPES = ['Breakfast', 'Brunch', 'Lunch', 'Dinner', 'Snack']
   const weekDates = getWeekDates()
   const [visible, setVisible] = useState(loadVisible)
+  const [openPicker, setOpenPicker] = useState(null)
 
   const toggleMealType = (type) => {
     setVisible(prev => {
@@ -273,6 +274,9 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
                     onAssign={assign}
                     onRemove={remove}
                     pickerOptions={pickerOptions}
+                    openKey={openPicker}
+                    onOpen={setOpenPicker}
+                    onClose={() => setOpenPicker(null)}
                   />
                 </div>
               ))}
