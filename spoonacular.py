@@ -8,17 +8,10 @@ API_KEY = os.getenv("SPOONACULAR_API_KEY")
 
 
 class SpoonacularError(Exception):
-    """Raised when the Spoonacular API returns an error we can't recover from.
-
-    By defining our own exception type, main.py can catch specifically this
-    error and return a clean 502 response instead of a raw 500 crash.
-    """
     pass
 
 
-# ── Diet / meal normalisation ─────────────────────────────────────────────────
-# Spoonacular only accepts specific strings for diet and meal type.
-# We normalise user input (free text) to those strings before sending.
+# Diet / meal normalisation
 
 _VALID_DIETS = {
     "vegetarian", "vegan", "gluten free", "ketogenic",
@@ -34,7 +27,7 @@ _DIET_ALIASES = {
     "plant-based": "vegan",
 }
 
-# Frontend sends "dinner"/"lunch" but Spoonacular uses "main course".
+# "dinner"/"lunch" map to "main course" in Spoonacular's type field
 _MEAL_TYPE_MAP = {
     "breakfast": "breakfast",
     "brunch": "breakfast",
@@ -49,10 +42,6 @@ _MEAL_TYPE_MAP = {
 
 
 def _resolve_diet(restrictions: list[str] | None) -> str | None:
-    """
-    Pick the first recognised Spoonacular diet from the user's list.
-    Spoonacular only accepts one diet value, so we take the first match.
-    """
     if not restrictions:
         return None
     for term in restrictions:
@@ -69,7 +58,7 @@ def _resolve_meal_type(meal: str | None) -> str | None:
     return _MEAL_TYPE_MAP.get(meal.strip().lower())
 
 
-# ── API calls ─────────────────────────────────────────────────────────────────
+# API calls
 
 def find_recipes(
     ingredients: list[str],
@@ -77,13 +66,6 @@ def find_recipes(
     meal_type: str | None = None,
     servings: int | None = None,
 ) -> list[dict]:
-    """
-    Search for recipes using Spoonacular's complexSearch endpoint.
-
-    We switched from findByIngredients to complexSearch because it supports
-    diet and meal-type filtering while returning the same ingredient match data
-    (usedIngredientCount, missedIngredientCount) when fillIngredients=True.
-    """
     params = {
         "apiKey": API_KEY,
         "includeIngredients": ",".join(ingredients),
@@ -102,9 +84,6 @@ def find_recipes(
         params["type"] = meal
 
     if servings is not None:
-        # minServings = N so a recipe that serves fewer people than requested
-        # is never returned (e.g. serving=2 won't surface a 1-person recipe).
-        # maxServings = N+2 allows a little headroom — leftovers are fine.
         params["minServings"] = servings
         params["maxServings"] = servings + 2
 
@@ -130,7 +109,6 @@ def find_recipes(
 
 
 def get_recipe_info(recipe_id: int) -> dict:
-    """Fetch full recipe details including nutrition and instructions."""
     try:
         response = requests.get(
             f"https://api.spoonacular.com/recipes/{recipe_id}/information",

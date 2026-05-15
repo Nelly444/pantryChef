@@ -13,17 +13,6 @@ from pydantic import BaseModel, Field, field_validator
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-
-
-_IP_RE = re.compile(r"^(\d{1,3}\.){3}\d{1,3}$|^[0-9a-fA-F:]+$")
-
-def _get_real_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        candidate = forwarded.split(",")[0].strip()
-        if _IP_RE.match(candidate):
-            return candidate
-    return get_remote_address(request)
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON, Text
 from sqlalchemy.orm import declarative_base, Session
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -36,10 +25,20 @@ logger = logging.getLogger(__name__)
 if not os.getenv("SPOONACULAR_API_KEY"):
     logger.warning("SPOONACULAR_API_KEY is not set — recipe endpoints will fail.")
 
-# ── Rate limiter & DB ─────────────────────────────────────────────────────────
+# Rate limiter & DB
 
-limiter  = Limiter(key_func=_get_real_ip)
-# Use /tmp on serverless (Vercel); fall back to project dir locally
+_IP_RE = re.compile(r"^(\d{1,3}\.){3}\d{1,3}$|^[0-9a-fA-F:]+$")
+
+def _get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        candidate = forwarded.split(",")[0].strip()
+        if _IP_RE.match(candidate):
+            return candidate
+    return get_remote_address(request)
+
+limiter = Limiter(key_func=_get_real_ip)
+# /tmp on Render/Vercel serverless; project dir locally
 _DB_PATH = os.path.join(os.getenv("VERCEL") and "/tmp" or os.path.dirname(__file__), "pantry.db")
 engine   = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
 Base     = declarative_base()
@@ -92,7 +91,7 @@ try:
 except Exception as e:
     logger.warning("DB init skipped: %s", e)
 
-# ── App & middleware ──────────────────────────────────────────────────────────
+# App & middleware
 
 app = FastAPI(title="PantryChef API")
 app.state.limiter = limiter
@@ -147,14 +146,12 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 
-# ── Input validation ──────────────────────────────────────────────────────────
-# Positive character allowlists block script/SQL/command injection payloads.
+# Input validation
 
 _INGREDIENT_RE = re.compile(r"^[a-zA-Z\xc0-\xff0-9][a-zA-Z\xc0-\xff0-9 '\-.,()/%]*$")
 _DIET_RE       = re.compile(r"^[a-zA-Z\xc0-\xff][a-zA-Z\xc0-\xff \-]*$")
 _VALID_MEALS   = Literal['breakfast','brunch','lunch','dinner','snack','appetizer','dessert','soup','salad']
-
-_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATE_RE       = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 class RecipeRequest(BaseModel):
     ingredients:          list[str]            = Field(min_length=1, max_length=20)
@@ -199,10 +196,9 @@ class RecipeRequest(BaseModel):
         if not v:
             return None
         cleaned = {}
-        for raw_key, raw_val in list(v.items())[:50]:   # cap at 50 entries
+        for raw_key, raw_val in list(v.items())[:50]:
             key = str(raw_key).strip().lower()
             val = str(raw_val).strip()
-            # Silently drop malformed entries — attacker gets no feedback
             if not key or len(key) > 60 or not _INGREDIENT_RE.match(key):
                 continue
             if not _DATE_RE.match(val):
@@ -210,7 +206,7 @@ class RecipeRequest(BaseModel):
             cleaned[key] = val
         return cleaned or None
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# Endpoints
 
 @app.get("/")
 def home():

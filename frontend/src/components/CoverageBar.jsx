@@ -1,5 +1,4 @@
-// Tailwind requires full class names to be present in source (no string interpolation).
-// The three levels map to complete, static class strings so the JIT compiler picks them up.
+// Tailwind JIT needs full static class names here — no string interpolation.
 const LEVELS = {
   high:   { bar: 'bg-sage-dark',  label: 'text-sage-dark'  },
   medium: { bar: 'bg-harvest',    label: 'text-harvest'    },

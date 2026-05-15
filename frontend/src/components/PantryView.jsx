@@ -2,7 +2,7 @@ import { useState } from 'react'
 import EmptyState from './EmptyState.jsx'
 import { Leaf, X } from './Icons.jsx'
 
-// ── Date helpers ──────────────────────────────────────────────────────────────
+// Date helpers
 
 function daysUntil(dateStr) {
   if (!dateStr) return null
@@ -15,7 +15,7 @@ function formatDisplay(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-// ── Expiry badge ──────────────────────────────────────────────────────────────
+// Expiry badge
 
 function ExpiryBadge({ days }) {
   if (days === null) return null
@@ -26,7 +26,7 @@ function ExpiryBadge({ days }) {
   return <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-[11px] font-bold text-green-700">Expires in {days}d</span>
 }
 
-// ── Ingredient card ───────────────────────────────────────────────────────────
+// Ingredient card
 
 function IngredientCard({ item, expDate, onRemove, onSetExpiry }) {
   const [editing, setEditing] = useState(false)
@@ -47,7 +47,6 @@ function IngredientCard({ item, expDate, onRemove, onSetExpiry }) {
   return (
     <div className={`card-interactive relative flex flex-col gap-3 rounded-2xl border border-olive/20 border-l-4 ${borderAccent} ${bgAccent} p-4 shadow-sm`}>
 
-      {/* Top row: icon + name + remove */}
       <div className="flex items-start gap-3">
         <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-forest/10 text-forest">
           <Leaf size={15} />
@@ -66,7 +65,6 @@ function IngredientCard({ item, expDate, onRemove, onSetExpiry }) {
         </button>
       </div>
 
-      {/* Expiry row */}
       <div>
         {editing ? (
           <div className="flex flex-col gap-2">
@@ -121,8 +119,6 @@ function IngredientCard({ item, expDate, onRemove, onSetExpiry }) {
   )
 }
 
-// ── Main view ─────────────────────────────────────────────────────────────────
-
 export default function PantryView({ ingredientsList, expirations, onRemove, onClear, onSetExpiry, onNavigateHome }) {
   const useSoon = ingredientsList
     .filter(item => { const d = daysUntil(expirations[item.toLowerCase()]); return d !== null && d <= 7 })
@@ -133,7 +129,6 @@ export default function PantryView({ ingredientsList, expirations, onRemove, onC
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
 
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-black italic text-bark">Your Pantry</h2>
@@ -152,7 +147,6 @@ export default function PantryView({ ingredientsList, expirations, onRemove, onC
       {ingredientsList.length > 0 ? (
         <div className="space-y-8">
 
-          {/* Use Soon section */}
           {useSoon.length > 0 && (
             <div>
               <div className="mb-3 flex items-center gap-2">
@@ -169,7 +163,6 @@ export default function PantryView({ ingredientsList, expirations, onRemove, onC
             </div>
           )}
 
-          {/* All other items */}
           {rest.length > 0 && (
             <div>
               {useSoon.length > 0 && (

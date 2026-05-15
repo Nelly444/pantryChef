@@ -12,7 +12,7 @@ function loadVisible() {
   catch { return DEFAULT_VISIBLE }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 function getWeekDates() {
   const today = new Date()
@@ -36,7 +36,7 @@ function isToday(d) {
   return d.getDate() === t.getDate() && d.getMonth() === t.getMonth() && d.getFullYear() === t.getFullYear()
 }
 
-// ── Recipe picker ─────────────────────────────────────────────────────────────
+// Recipe picker
 
 function RecipePicker({ options, onPick, onClose }) {
   const [query, setQuery] = useState('')
@@ -87,7 +87,7 @@ function RecipePicker({ options, onPick, onClose }) {
   )
 }
 
-// ── Single meal slot cell ─────────────────────────────────────────────────────
+// Meal slot cell
 
 function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions, openKey, onOpen, onClose }) {
   const isOpen = openKey === `${day}__${mealType}`
@@ -149,8 +149,6 @@ function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions, op
   )
 }
 
-// ── Main view ─────────────────────────────────────────────────────────────────
-
 export default function MealPlanView({ favs, expirations, plan, assign, remove, clear, generate, plannedCount, uniqueMissing }) {
   const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const MEAL_TYPES = ['Breakfast', 'Brunch', 'Lunch', 'Dinner', 'Snack']
@@ -178,7 +176,6 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
 
-      {/* Header */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-2xl font-black italic text-bark">Weekly Meal Plan</h2>
@@ -212,7 +209,6 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
         </div>
       )}
 
-      {/* Meal type toggles */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="text-[10px] font-black uppercase tracking-widest text-bark-light/40">Show:</span>
         {MEAL_TYPES.map(type => (
@@ -231,15 +227,11 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="overflow-x-auto pb-2">
         <div className="min-w-[780px]">
 
-          {/* Day header row */}
           <div className="mb-2 flex gap-2">
-            {/* Meal type label gutter */}
             <div className="w-[88px] shrink-0" />
-            {/* Day columns */}
             {DAYS.map((day, i) => {
               const today = isToday(weekDates[i])
               return (
@@ -257,14 +249,11 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
             })}
           </div>
 
-          {/* Meal type rows — only render active types */}
           {activeMealTypes.map(mealType => (
             <div key={mealType} className="mb-2 flex gap-2">
-              {/* Meal type label */}
               <div className="flex w-[88px] shrink-0 items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest text-bark-light/45">{mealType}</span>
               </div>
-              {/* Cells */}
               {DAYS.map(day => (
                 <div key={day} className="flex-1">
                   <MealCell
@@ -286,7 +275,6 @@ export default function MealPlanView({ favs, expirations, plan, assign, remove, 
         </div>
       </div>
 
-      {/* Weekly summary */}
       {plannedCount > 0 && (
         <div className="mt-8 grid gap-3 rounded-2xl border border-olive/20 bg-white p-5 sm:grid-cols-3">
           <div className="text-center">

@@ -1,9 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 function formatHttpError(status, data) {
-  // Backend sends { error: '...' } for 4xx/5xx responses
   if (typeof data?.error === 'string') return data.error
-  // FastAPI/Pydantic validation sends { detail: [...] }
   if (data?.detail) {
     const d = data.detail
     if (Array.isArray(d)) return d.map(e => e.msg || JSON.stringify(e)).join(' ')
@@ -21,7 +19,6 @@ async function apiFetch(url, options = {}) {
   return data
 }
 
-// POST /recipes/suggest → { results: [...] }
 export async function suggestRecipes(body, signal) {
   return apiFetch(`${API_BASE}/recipes/suggest`, {
     method: 'POST',
@@ -31,7 +28,6 @@ export async function suggestRecipes(body, signal) {
   })
 }
 
-// GET /api/recipes/:id/detail → { recipe, nutrition }
 export async function getRecipeDetail(recipeId, serving = 1) {
   return apiFetch(`${API_BASE}/recipes/${recipeId}/detail?serving=${serving}`)
 }
