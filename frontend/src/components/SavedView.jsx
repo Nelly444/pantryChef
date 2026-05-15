@@ -77,7 +77,7 @@ function AddToPlanModal({ recipe, onConfirm, onClose }) {
   )
 }
 
-export default function SavedView({ favs, isFav, onToggleFav, onSelect, onNavigateHome, onAddToPlan }) {
+export default function SavedView({ favs, isFav, onToggleFav, onSelect, onNavigateHome, onAddToPlan, onClearAll }) {
   const [addingRecipe, setAddingRecipe] = useState(null)
   const [toast, setToast] = useState('')
 
@@ -89,11 +89,21 @@ export default function SavedView({ favs, isFav, onToggleFav, onSelect, onNaviga
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <div className="mb-6">
-        <h2 className="font-display text-2xl font-black italic text-bark">Saved Recipes</h2>
-        <p className="text-sm text-bark-light/60">
-          {favs.length} recipe{favs.length !== 1 ? 's' : ''} saved
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-2xl font-black italic text-bark">Saved Recipes</h2>
+          <p className="text-sm text-bark-light/60">
+            {favs.length} recipe{favs.length !== 1 ? 's' : ''} saved
+          </p>
+        </div>
+        {favs.length > 0 && (
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-600 transition hover:bg-red-100">
+            Clear all
+          </button>
+        )}
       </div>
 
       {toast && (

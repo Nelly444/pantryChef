@@ -33,5 +33,10 @@ export function useFavorites() {
 
   const isFav = (id) => favs.some(f => f.id === id)
 
-  return { favs, toggle, isFav }
+  const clearAll = () => {
+    try { localStorage.removeItem(KEY) } catch {}
+    setFavs([])
+  }
+
+  return { favs, toggle, isFav, clearAll }
 }

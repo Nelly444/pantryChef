@@ -38,7 +38,7 @@ export default function App() {
   const [selectedResult, setSelectedResult]   = useState(null)
   const [cookingSteps, setCookingSteps]       = useState([])
   const [expirations, setExpirations]         = useState(loadExpirations)
-  const { favs, toggle: toggleFav, isFav }    = useFavorites()
+  const { favs, toggle: toggleFav, isFav, clearAll: clearFavs } = useFavorites()
   const { plan, assign, remove, clear, generate, plannedCount, uniqueMissing } = useMealPlan()
 
   useEffect(() => {
@@ -242,6 +242,7 @@ export default function App() {
           <div className="view-enter">
             <SavedView favs={favs} isFav={isFav} onToggleFav={toggleFav}
               onSelect={setSelectedResult} onNavigateHome={() => navigate('home')}
+              onClearAll={clearFavs}
               onAddToPlan={(fav, day, mealType) => assign(day, mealType, {
                 recipe: fav,
                 match_percentage: fav.match_percentage ?? 0,
