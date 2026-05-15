@@ -13,10 +13,14 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 
+_IP_RE = re.compile(r"^(\d{1,3}\.){3}\d{1,3}$|^[0-9a-fA-F:]+$")
+
 def _get_real_ip(request: Request) -> str:
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
-        return forwarded.split(",")[0].strip()
+        candidate = forwarded.split(",")[0].strip()
+        if _IP_RE.match(candidate):
+            return candidate
     return get_remote_address(request)
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
 from sqlalchemy.orm import declarative_base, Session

@@ -66,7 +66,7 @@ export default function RecipeDetailModal({ result, serving, isFav, onToggleFav,
 
         {/* Header image */}
         <div className="relative shrink-0">
-          {recipe.image ? (
+          {recipe.image && isSafeUrl(recipe.image) ? (
             <img
               src={recipe.image}
               alt={recipe.title ?? 'Recipe'}
