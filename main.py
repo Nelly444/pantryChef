@@ -185,7 +185,8 @@ def suggest_recipes(request: Request, body: RecipeRequest):
     try:
         results = find_top_matches(pantry, body.dietary_restrictions, body.meal, body.serving, body.expirations)
     except SpoonacularError as e:
-        return JSONResponse(status_code=502, content={"error": str(e)})
+        logger.error("Spoonacular error on suggest: %s", e)
+        return JSONResponse(status_code=502, content={"error": "Recipe service temporarily unavailable. Please try again."})
 
     if not results:
         return JSONResponse(status_code=404, content={"error": "No matching recipes found."})
@@ -216,7 +217,8 @@ def get_recipe_detail(
     try:
         recipe_info = get_recipe_info(recipe_id)
     except SpoonacularError as e:
-        return JSONResponse(status_code=502, content={"error": str(e)})
+        logger.error("Spoonacular error on detail %s: %s", recipe_id, e)
+        return JSONResponse(status_code=502, content={"error": "Recipe service temporarily unavailable. Please try again."})
     return {"recipe": recipe_info, "nutrition": calculate_nutrition(recipe_info, serving)}
 
 
