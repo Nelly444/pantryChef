@@ -28,7 +28,7 @@ from spoonacular import get_recipe_info, SpoonacularError
 logger = logging.getLogger(__name__)
 
 if not os.getenv("SPOONACULAR_API_KEY"):
-    raise RuntimeError("SPOONACULAR_API_KEY is not set. Add it to your .env file.")
+    logger.warning("SPOONACULAR_API_KEY is not set — recipe endpoints will fail.")
 
 # ── Rate limiter & DB ─────────────────────────────────────────────────────────
 
