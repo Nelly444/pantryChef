@@ -66,9 +66,6 @@ export default function NavBar({ view, onNavigate, ingredientCount, savedCount }
               </span>
             </button>
           )}
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-forest/10 text-xs font-black text-forest transition-all duration-150 hover:bg-forest/20 hover:scale-105 cursor-default">
-            NS
-          </div>
         </div>
 
       </div>
