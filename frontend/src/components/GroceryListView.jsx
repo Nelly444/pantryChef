@@ -107,6 +107,15 @@ export default function GroceryListView({ onNavigateHome }) {
             className="btn-ghost rounded-xl border border-olive/30 bg-white px-4 py-2 text-sm font-bold text-bark-light">
             Copy list
           </button>
+          {!isComplete && (
+            <button
+              type="button"
+              onClick={() => setChecked(new Set(allItems.map(it => it.name.toLowerCase())))}
+              className="btn-ghost rounded-xl border border-olive/30 bg-white px-4 py-2 text-sm font-bold text-bark-light/60"
+            >
+              Check all
+            </button>
+          )}
           {totalChecked > 0 && (
             <button
               type="button"
