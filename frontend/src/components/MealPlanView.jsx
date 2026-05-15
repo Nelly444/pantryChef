@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMealPlan, DAY_SHORT } from '../hooks/useMealPlan.js'
+import { DAY_SHORT } from '../hooks/useMealPlan.js'
 import { Zap, X, Bowl, Flame, Clock } from './Icons.jsx'
 
 const VISIBLE_KEY = 'pantry-meal-types-visible'
@@ -151,8 +151,9 @@ function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions }) 
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
-export default function MealPlanView({ results, favs, expirations }) {
-  const { plan, DAYS, DAY_SHORT, MEAL_TYPES, assign, remove, clear, generate, plannedCount, uniqueMissing } = useMealPlan()
+export default function MealPlanView({ favs, expirations, plan, assign, remove, clear, generate, plannedCount, uniqueMissing }) {
+  const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  const MEAL_TYPES = ['Breakfast', 'Brunch', 'Lunch', 'Dinner', 'Snack']
   const weekDates = getWeekDates()
   const [visible, setVisible] = useState(loadVisible)
 
@@ -166,14 +167,12 @@ export default function MealPlanView({ results, favs, expirations }) {
 
   const activeMealTypes = MEAL_TYPES.filter(m => visible[m])
 
-  const favResults = favs.map(f => ({
+  const pickerOptions = favs.map(f => ({
     recipe: f,
     match_percentage: f.match_percentage ?? 0,
     missing_ingredients: f.missing_ingredients ?? [],
     nutrition: f.nutrition ?? null,
   }))
-  const idsSeen = new Set(results.map(r => r.recipe.id))
-  const pickerOptions = [...results, ...favResults.filter(f => !idsSeen.has(f.recipe.id))]
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
@@ -190,8 +189,8 @@ export default function MealPlanView({ results, favs, expirations }) {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => generate(results)}
-            disabled={results.length === 0}
+            onClick={() => generate(pickerOptions)}
+            disabled={pickerOptions.length === 0}
             className="btn-shimmer inline-flex items-center gap-2 rounded-xl bg-forest px-4 py-2.5 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
             style={{ backgroundImage: 'linear-gradient(90deg, #3d5c2e 0%, #5c7a42 50%, #3d5c2e 100%)' }}
           >
@@ -208,7 +207,7 @@ export default function MealPlanView({ results, favs, expirations }) {
 
       {pickerOptions.length === 0 && (
         <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Run a recipe search on Home first — results will appear here as options to plan with.
+          Save some recipes first — go to Home, search for recipes, and tap the heart icon to save them here.
         </div>
       )}
 

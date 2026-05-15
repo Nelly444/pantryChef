@@ -18,6 +18,7 @@ import TopProgress from './components/TopProgress.jsx'
 import { Bowl, Leaf, Search, Sprout } from './components/Icons.jsx'
 import { suggestRecipes } from './lib/api.js'
 import { useFavorites } from './hooks/useFavorites.js'
+import { useMealPlan } from './hooks/useMealPlan.js'
 
 const EXP_KEY = 'pantry-expirations'
 
@@ -38,6 +39,7 @@ export default function App() {
   const [cookingSteps, setCookingSteps]       = useState([])
   const [expirations, setExpirations]         = useState(loadExpirations)
   const { favs, toggle: toggleFav, isFav }    = useFavorites()
+  const { plan, assign, remove, clear, generate, plannedCount, uniqueMissing } = useMealPlan()
 
   useEffect(() => {
     localStorage.setItem(EXP_KEY, JSON.stringify(expirations))
@@ -239,13 +241,23 @@ export default function App() {
         {view === 'saved' && (
           <div className="view-enter">
             <SavedView favs={favs} isFav={isFav} onToggleFav={toggleFav}
-              onSelect={setSelectedResult} onNavigateHome={() => navigate('home')} />
+              onSelect={setSelectedResult} onNavigateHome={() => navigate('home')}
+              onAddToPlan={(fav, day, mealType) => assign(day, mealType, {
+                recipe: fav,
+                match_percentage: fav.match_percentage ?? 0,
+                missing_ingredients: fav.missing_ingredients ?? [],
+                nutrition: fav.nutrition ?? null,
+              })} />
           </div>
         )}
 
         {view === 'plan' && (
           <div className="view-enter">
-            <MealPlanView results={results} favs={favs} expirations={expirations} />
+            <MealPlanView
+              favs={favs} expirations={expirations}
+              plan={plan} assign={assign} remove={remove} clear={clear}
+              generate={generate} plannedCount={plannedCount} uniqueMissing={uniqueMissing}
+            />
           </div>
         )}
 
