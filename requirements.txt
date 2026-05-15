@@ -8,7 +8,6 @@ sqlalchemy==2.0.41
 
 # Pinned transitive deps
 pydantic==2.11.7
-pydantic-core==2.33.2
 starlette==0.47.3
 anyio==4.10.0
 h11==0.16.0
