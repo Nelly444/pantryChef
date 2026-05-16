@@ -1,15 +1,5 @@
 import { cn } from '../../lib/utils.js'
 
-/**
- * ShineBorder — a bright arc of light that rotates clockwise around the border.
- *
- * Technique:
- *   Outer div: conic-gradient background + padding = borderWidth px.
- *   Inner div: solid white, so the gradient is only visible in the padding band.
- *   @property --shine-angle lets the browser interpolate the angle smoothly,
- *   making the conic-gradient appear to spin. Without @property, custom
- *   property animation would snap instead of sweep.
- */
 export default function ShineBorder({
   borderRadius = 24,
   borderWidth = 2,
