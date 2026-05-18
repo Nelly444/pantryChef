@@ -1,5 +1,6 @@
+
 import os
-os.environ["SPOONACULAR_API_KEY"] = "test-key"
+os.environ["SPOONACULAR_API_KEY"] = "test-key"  # prevent startup crash
 
 import pytest
 from unittest.mock import patch
@@ -11,11 +12,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_rate_limits():
-    """Clear slowapi's in-memory counters before each test so the rate limit doesn't fire mid-suite."""
     limiter._storage.reset()
     yield
 
-# Fake data
+# ── Fake data ────────────────────────────────────────────────────────────────
 
 FAKE_RECIPE = {
     "id": 1,
@@ -44,6 +44,7 @@ FAKE_RECIPE = {
     },
 }
 
+# find_top_matches returns a list of result dicts — each has recipe + metadata
 FAKE_RESULT = {
     "recipe":              FAKE_RECIPE,
     "match_percentage":    75.0,
@@ -57,11 +58,12 @@ FAKE_RESULT_2X = {
 }
 
 
-# /recipes/suggest
+# ── /recipes/suggest ──────────────────────────────────────────────────────────
 
 class TestSuggestEndpoint:
 
     def test_happy_path(self):
+        """Valid request returns results list with expected fields."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic", "pasta", "cream"]})
         assert res.status_code == 200
@@ -115,6 +117,7 @@ class TestSuggestEndpoint:
         assert "error" in res.json()
 
     def test_nutrition_already_scaled_in_result(self):
+        """Nutrition in each result is pre-scaled by find_top_matches — spot-check the field exists."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT_2X]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"], "serving": 2})
         assert res.status_code == 200
@@ -132,6 +135,7 @@ class TestSuggestEndpoint:
         assert res.status_code == 422
 
     def test_multiple_results_returned(self):
+        """All results from find_top_matches are forwarded to the client."""
         result2 = {**FAKE_RESULT, "match_percentage": 60.0}
         with patch("main.find_top_matches", return_value=[FAKE_RESULT, result2]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
@@ -139,11 +143,12 @@ class TestSuggestEndpoint:
         assert len(res.json()["results"]) == 2
 
 
-# Dietary restrictions & meal type
+# ── Dietary restrictions & meal type ─────────────────────────────────────────
 
 class TestDietaryFiltering:
 
     def test_dietary_restrictions_passed_to_find_top_matches(self):
+        """Dietary restrictions must be forwarded to find_top_matches."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -153,6 +158,7 @@ class TestDietaryFiltering:
         assert kwargs.get("dietary_restrictions") == ["vegetarian"] or args[1] == ["vegetarian"]
 
     def test_meal_type_passed_to_find_top_matches(self):
+        """Meal type must be forwarded to find_top_matches."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -162,6 +168,7 @@ class TestDietaryFiltering:
         assert kwargs.get("meal_type") == "dinner" or args[2] == "dinner"
 
     def test_serving_count_passed_to_find_top_matches(self):
+        """Serving count must be forwarded to find_top_matches."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock_fn:
             client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -207,7 +214,7 @@ class TestDietaryFiltering:
         assert _resolve_meal_type("fourth meal") is None
 
 
-# /history
+# ── /history ──────────────────────────────────────────────────────────────────
 
 class TestHistoryEndpoint:
 
@@ -229,7 +236,7 @@ class TestHistoryEndpoint:
         assert res.status_code == 422
 
 
-# /history/{id} DELETE
+# ── /history/{id} DELETE ──────────────────────────────────────────────────────
 
 class TestDeleteHistory:
 
@@ -242,7 +249,7 @@ class TestDeleteHistory:
         assert res.status_code == 422
 
 
-# Security tests
+# ── Security tests ───────────────────────────────────────────────────────────
 
 class TestSecurity:
 
@@ -297,6 +304,7 @@ class TestSecurity:
         assert res.status_code == 422
 
     def test_db_write_failure_does_not_fail_response(self):
+        """A database error during history write must not return 500 to the user."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]), \
              patch("main.Session", side_effect=Exception("DB is down")):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
@@ -325,7 +333,7 @@ class TestSecurity:
         assert res.status_code == 404  # not 405
 
 
-# Injection & allowlist tests
+# ── Injection & allowlist tests ───────────────────────────────────────────────
 
 class TestInjectionRejection:
 
@@ -390,6 +398,7 @@ class TestInjectionRejection:
         assert res.status_code == 422
 
     def test_path_traversal_in_recipe_id_rejected(self):
+        # Path normalises to /history/detail — router rejects it (404/405/422), never executes recipe logic
         res = client.get("/recipes/../history/detail")
         assert res.status_code in (404, 405, 422)
 
@@ -406,11 +415,13 @@ class TestInjectionRejection:
         assert res.status_code == 422
 
 
-# Expirations field
+# expirations field 
 
 class TestExpirations:
 
+
     def test_expirations_accepted_and_forwarded(self):
+        """Valid expirations dict is passed through to find_top_matches."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
             res = client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -420,6 +431,7 @@ class TestExpirations:
         assert mock.call_args.args[4] == {"garlic": "2026-12-01"}
 
     def test_urgency_bonus_present_in_response(self):
+        """Response includes urgency_bonus field on each result."""
         result_with_urgency = {**FAKE_RESULT, "urgency_bonus": 20}
         with patch("main.find_top_matches", return_value=[result_with_urgency]):
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
@@ -429,6 +441,7 @@ class TestExpirations:
         assert first["urgency_bonus"] == 20
 
     def test_invalid_expiration_date_silently_dropped(self):
+        """Malformed date strings are stripped; valid ones pass through."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
             res = client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -441,6 +454,7 @@ class TestExpirations:
         assert passed.get("pasta") == "2026-12-01"
 
     def test_injection_key_in_expirations_silently_dropped(self):
+        """Injection-attempt keys in expirations are stripped by the validator."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
             res = client.post("/recipes/suggest", json={
                 "ingredients": ["garlic"],
@@ -451,14 +465,17 @@ class TestExpirations:
         assert "<script>alert(1)</script>" not in (passed or {})
 
     def test_expirations_omitted_defaults_to_none(self):
+        """Omitting expirations field entirely passes None to find_top_matches."""
         with patch("main.find_top_matches", return_value=[FAKE_RESULT]) as mock:
             res = client.post("/recipes/suggest", json={"ingredients": ["garlic"]})
         assert res.status_code == 200
         assert mock.call_args.args[4] is None
 
     def test_urgency_score_expired_ingredient(self):
+        """Already-expired ingredient gets maximum urgency score (30)."""
         from recipe import _urgency_score
-        assert _urgency_score("garlic", {"garlic": "2020-01-01"}) == 30
+        yesterday = "2020-01-01"  # definitely expired
+        assert _urgency_score("garlic", {"garlic": yesterday}) == 30
 
     def test_urgency_score_expiring_in_2_days(self):
         from recipe import _urgency_score
@@ -487,7 +504,7 @@ class TestExpirations:
         assert _urgency_score("garlic", {"garlic": "not-a-date"}) == 0
 
 
-# recipe.py unit tests
+# ── recipe.py unit tests ──────────────────────────────────────────────────────
 
 class TestRecipeLogic:
 
@@ -499,7 +516,7 @@ class TestRecipeLogic:
     def test_calculate_nutrition_scales_correctly(self):
         from recipe import calculate_nutrition
         result = calculate_nutrition(FAKE_RECIPE, servings=3)
-        assert result["calories"] == 1200
+        assert result["calories"] == 1200  # 400 * 3
 
     def test_calculate_nutrition_single_serving(self):
         from recipe import calculate_nutrition
@@ -526,6 +543,8 @@ class TestRecipeLogic:
 
     def test_missing_ingredients_case_insensitive(self):
         from recipe import missing_ingredients
-        pantry = {"GARLIC", "PASTA"}
+        pantry = {"GARLIC", "PASTA"}  # uppercase in pantry
+        # pantry items are lowercased on entry in main.py but let's verify
+        # the function compares .lower()
         missing = missing_ingredients(FAKE_RECIPE, {i.lower() for i in pantry})
         assert "garlic" not in missing

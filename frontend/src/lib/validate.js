@@ -1,6 +1,5 @@
 const INGREDIENT_RE = /^[a-zA-ZÀ-ÿ0-9][a-zA-ZÀ-ÿ0-9 '\-.,()/%]*$/
 const DIET_RE = /^[a-zA-ZÀ-ÿ][a-zA-ZÀ-ÿ \-]*$/
-// Only http/https — blocks javascript:, data:, vbscript:, etc.
 const SAFE_URL_RE = /^https?:\/\//i
 
 const VALID_MEALS = new Set([
