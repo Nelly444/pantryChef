@@ -113,7 +113,7 @@ export default function App() {
       'high-match':  r => r.match_percentage >= 80,
       'quick':       r => (r.recipe.readyInMinutes ?? 999) <= 30,
       'vegetarian':  r => r.recipe.vegetarian,
-      '1-missing':   r => r.missing_ingredients.length <= 1,
+      '1-missing':   r => (r.missing_ingredients ?? []).length <= 1,
     }[activeFilter]
     return fn ? results.filter(fn) : results
   }, [results, activeFilter])
