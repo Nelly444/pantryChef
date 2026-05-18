@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateIngredient, validateDietTerm, isSafeUrl, isValidMeal } from './validate.js'
 
-// ── validateIngredient ──────────────────────────────────────────────────────
+// validateIngredient
 
 describe('validateIngredient', () => {
   it('accepts normal ingredient names', () => {
@@ -56,7 +56,7 @@ describe('validateIngredient', () => {
   })
 })
 
-// ── validateDietTerm ────────────────────────────────────────────────────────
+// validateDietTerm
 
 describe('validateDietTerm', () => {
   it('returns null for empty string (optional field)', () => {
@@ -82,7 +82,7 @@ describe('validateDietTerm', () => {
   })
 })
 
-// ── isSafeUrl ───────────────────────────────────────────────────────────────
+// isSafeUrl
 
 describe('isSafeUrl', () => {
   it('accepts http and https URLs', () => {
@@ -115,7 +115,7 @@ describe('isSafeUrl', () => {
   })
 })
 
-// ── isValidMeal ─────────────────────────────────────────────────────────────
+// isValidMeal
 
 describe('isValidMeal', () => {
   it('accepts all valid meal types', () => {

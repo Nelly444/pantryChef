@@ -15,7 +15,7 @@ def reset_rate_limits():
     limiter._storage.reset()
     yield
 
-# ── Fake data ────────────────────────────────────────────────────────────────
+# Fake data
 
 FAKE_RECIPE = {
     "id": 1,
@@ -58,7 +58,7 @@ FAKE_RESULT_2X = {
 }
 
 
-# ── /recipes/suggest ──────────────────────────────────────────────────────────
+# /recipes/suggest
 
 class TestSuggestEndpoint:
 
@@ -143,7 +143,7 @@ class TestSuggestEndpoint:
         assert len(res.json()["results"]) == 2
 
 
-# ── Dietary restrictions & meal type ─────────────────────────────────────────
+# Dietary restrictions & meal type
 
 class TestDietaryFiltering:
 
@@ -214,7 +214,7 @@ class TestDietaryFiltering:
         assert _resolve_meal_type("fourth meal") is None
 
 
-# ── /history ──────────────────────────────────────────────────────────────────
+# /history
 
 class TestHistoryEndpoint:
 
@@ -236,7 +236,7 @@ class TestHistoryEndpoint:
         assert res.status_code == 422
 
 
-# ── /history/{id} DELETE ──────────────────────────────────────────────────────
+# /history/{id} DELETE
 
 class TestDeleteHistory:
 
@@ -249,7 +249,7 @@ class TestDeleteHistory:
         assert res.status_code == 422
 
 
-# ── Security tests ───────────────────────────────────────────────────────────
+# Security tests
 
 class TestSecurity:
 
@@ -333,7 +333,7 @@ class TestSecurity:
         assert res.status_code == 404  # not 405
 
 
-# ── Injection & allowlist tests ───────────────────────────────────────────────
+# Injection & allowlist tests
 
 class TestInjectionRejection:
 
@@ -504,7 +504,7 @@ class TestExpirations:
         assert _urgency_score("garlic", {"garlic": "not-a-date"}) == 0
 
 
-# ── recipe.py unit tests ──────────────────────────────────────────────────────
+# recipe.py unit tests
 
 class TestRecipeLogic:
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useMealPlan, DAYS, DAY_SHORT, MEAL_TYPES } from './useMealPlan.js'
 
-// ── localStorage mock ─────────────────────────────────────────────────────────
+// localStorage mock
 
 const localStorageMock = (() => {
   let store = {}
@@ -15,7 +15,7 @@ const localStorageMock = (() => {
 })()
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true })
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// Helpers
 
 const makeResult = (id, title, match = 80, missing = []) => ({
   recipe: { id, title, usedIngredients: [] },
@@ -24,7 +24,7 @@ const makeResult = (id, title, match = 80, missing = []) => ({
   nutrition: { calories: 400, protein: 20, fat: 10, carbs: 50 },
 })
 
-// ── Exports ───────────────────────────────────────────────────────────────────
+// Exports
 
 describe('DAYS / DAY_SHORT / MEAL_TYPES exports', () => {
   it('has 7 days', () => {
@@ -45,7 +45,7 @@ describe('DAYS / DAY_SHORT / MEAL_TYPES exports', () => {
   })
 })
 
-// ── Hook behaviour ────────────────────────────────────────────────────────────
+// Hook behaviour
 
 describe('useMealPlan', () => {
   beforeEach(() => localStorageMock.clear())
