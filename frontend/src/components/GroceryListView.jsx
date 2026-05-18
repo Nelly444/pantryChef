@@ -21,10 +21,7 @@ function categorize(name) {
 
 export default function GroceryListView({ onNavigateHome }) {
   const { plan, DAYS, DAY_SHORT } = useMealPlan()
-  const [checked, setChecked] = useState(() => {
-    try { localStorage.removeItem('pantry-grocery-checked') } catch {}
-    return new Set()
-  })
+  const [checked, setChecked] = useState(() => new Set())
 
   const toggle = (key) => {
     const next = new Set(checked)
@@ -32,7 +29,6 @@ export default function GroceryListView({ onNavigateHome }) {
     setChecked(next)
   }
 
-  // Build ingredient → days map (plan is now day → mealType → result)
   const itemDays = {}
   DAYS.forEach((day, i) => {
     const daySlots = plan[day] ?? {}

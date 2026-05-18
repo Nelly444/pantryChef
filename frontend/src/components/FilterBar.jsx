@@ -12,7 +12,7 @@ export default function FilterBar({ active, onChange, results }) {
     'high-match': results.filter(r => r.match_percentage >= 80).length,
     quick:        results.filter(r => (r.recipe.readyInMinutes ?? 999) <= 30).length,
     vegetarian:   results.filter(r => r.recipe.vegetarian).length,
-    '1-missing':  results.filter(r => r.missing_ingredients.length <= 1).length,
+    '1-missing':  results.filter(r => (r.missing_ingredients ?? []).length <= 1).length,
   }
 
   return (

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DAY_SHORT } from '../hooks/useMealPlan.js'
+import { DAY_SHORT, DAYS, MEAL_TYPES } from '../hooks/useMealPlan.js'
 import { Zap, X, Bowl, Flame, Clock } from './Icons.jsx'
 
 const VISIBLE_KEY = 'pantry-meal-types-visible'
@@ -150,8 +150,6 @@ function MealCell({ day, mealType, result, onAssign, onRemove, pickerOptions, op
 }
 
 export default function MealPlanView({ favs, expirations, plan, assign, remove, clear, generate, plannedCount, uniqueMissing }) {
-  const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-  const MEAL_TYPES = ['Breakfast', 'Brunch', 'Lunch', 'Dinner', 'Snack']
   const weekDates = getWeekDates()
   const [visible, setVisible] = useState(loadVisible)
   const [openPicker, setOpenPicker] = useState(null)

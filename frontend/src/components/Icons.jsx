@@ -128,15 +128,6 @@ export function Search({ size = 20, className = '' }) {
   )
 }
 
-export function User({ size = 20, className = '' }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" {...s} strokeWidth="2" className={className}>
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  )
-}
-
 export function X({ size = 20, className = '' }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" {...s} strokeWidth="2" className={className}>

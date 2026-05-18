@@ -39,9 +39,9 @@ def _get_real_ip(request: Request) -> str:
 
 limiter = Limiter(key_func=_get_real_ip)
 # /tmp on Render/Vercel serverless; project dir locally
-_DB_PATH = os.path.join(os.getenv("VERCEL") and "/tmp" or os.path.dirname(__file__), "pantry.db")
-engine   = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
-Base     = declarative_base()
+_DB_PATH = os.path.join("/tmp" if os.getenv("VERCEL") else os.path.dirname(__file__), "pantry.db")
+engine = create_engine(f"sqlite:///{_DB_PATH}", connect_args={"check_same_thread": False})
+Base = declarative_base()
 
 class SearchHistory(Base):
     __tablename__ = "search_history"

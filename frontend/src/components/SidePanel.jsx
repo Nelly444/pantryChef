@@ -1,7 +1,7 @@
 import { Bowl, Clock, Leaf, CheckCircle } from './Icons.jsx'
 
 export default function SidePanel({ results, ingredientsList }) {
-  const readyNow = results.filter(r => r.missing_ingredients.length === 0)
+  const readyNow = results.filter(r => (r.missing_ingredients ?? []).length === 0)
   const quickest = results.reduce((min, r) => {
     const t = r.recipe.readyInMinutes ?? Infinity
     return t < (min?.recipe.readyInMinutes ?? Infinity) ? r : min
