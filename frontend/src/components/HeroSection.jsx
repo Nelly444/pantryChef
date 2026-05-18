@@ -25,14 +25,28 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
 
   const handleSubmit = (e) => {
     e?.preventDefault()
-    if (ingredientsList.length === 0) { setInputHint('Add at least one ingredient first.'); return }
+    const extra = ingredient.trim()
+    let finalList = [...ingredientsList]
+
+    if (extra) {
+      const err = validateIngredient(extra)
+      if (err) { setInputHint(err); return }
+      if (!finalList.some(x => x.toLowerCase() === extra.toLowerCase())) {
+        finalList = [...finalList, extra]
+        onAdd(extra)
+      }
+      setIngredient('')
+      setInputHint('')
+    }
+
+    if (finalList.length === 0) { setInputHint('Add at least one ingredient first.'); return }
+
     const terms = dietaryText.split(',').map(s => s.trim()).filter(Boolean)
     const valid = terms.filter(s => validateDietTerm(s) === null)
     const invalid = terms.filter(s => validateDietTerm(s) !== null)
-    if (invalid.length) {
-      setInputHint(`Ignored unrecognised dietary terms: ${invalid.join(', ')}`)
-    }
-    onSearch({ meal: meal || null, dietary: valid.length ? valid : null })
+    if (invalid.length) setInputHint(`Ignored dietary terms: ${invalid.join(', ')}`)
+
+    onSearch({ meal: meal || null, dietary: valid.length ? valid : null, ingredients: finalList })
   }
 
   return (
@@ -62,7 +76,7 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
                   maxLength={60}
                   value={ingredient}
                   onChange={e => { setIngredient(e.target.value); if (inputHint) setInputHint('') }}
-                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); tryAdd(ingredient) } }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); ingredient.trim() ? tryAdd(ingredient) : handleSubmit(e) } }}
                   className="w-full rounded-xl border border-olive/20 bg-cream/60 py-3 pl-9 pr-4 text-sm text-bark outline-none placeholder:text-gray-400 focus-visible:border-forest focus-visible:ring-2 focus-visible:ring-forest/20 transition"
                 />
               </div>
@@ -70,7 +84,8 @@ export default function HeroSection({ ingredientsList, onAdd, onRemove, onClear,
                 className="btn-ghost rounded-xl border border-olive/20 bg-cream px-4 py-3 text-sm font-bold text-bark-light hover:bg-cream-dark">
                 Add
               </button>
-              <button type="submit" disabled={loading || ingredientsList.length === 0}
+              <button type="submit"
+                disabled={loading || (ingredientsList.length === 0 && !ingredient.trim())}
                 className="btn-shimmer rounded-xl bg-forest px-5 py-3 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ backgroundImage: loading ? undefined : 'linear-gradient(90deg, #3d5c2e 0%, #5c7a42 50%, #3d5c2e 100%)' }}>
                 {loading ? 'Searching…' : 'Find Recipes'}

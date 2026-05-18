@@ -74,7 +74,8 @@ export default function App() {
     })
   }, [])
 
-  const handleSearch = useCallback(async ({ meal, dietary }) => {
+  const handleSearch = useCallback(async ({ meal, dietary, ingredients: passedIngredients }) => {
+    const ingredients = passedIngredients ?? ingredientsList
     setError('')
     setResults([])
     setActiveFilter('all')
@@ -83,7 +84,7 @@ export default function App() {
     const timeout = setTimeout(() => controller.abort(), 30_000)
     try {
       const data = await suggestRecipes({
-        ingredients: ingredientsList,
+        ingredients,
         serving: Math.max(1, Math.min(20, serving)),
         meal,
         dietary_restrictions: dietary,
