@@ -167,8 +167,8 @@ class RecipeRequest(BaseModel):
         if not cleaned:
             raise ValueError("Ingredients list cannot be empty.")
         for item in cleaned:
-            if len(item) < 2:
-                raise ValueError(f"Ingredient '{item}' is too short (min 2 chars).")
+            if len(item) < 3:
+                raise ValueError(f"Ingredient '{item}' is too short (min 3 chars).")
             if len(item) > 60:
                 raise ValueError(f"Ingredient '{item[:30]}' is too long (max 60 chars).")
             if not _INGREDIENT_RE.match(item):

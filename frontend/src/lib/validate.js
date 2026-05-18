@@ -10,7 +10,7 @@ const VALID_MEALS = new Set([
 export function validateIngredient(raw) {
   const s = raw.trim()
   if (!s) return 'Enter an ingredient name.'
-  if (s.length < 2) return 'Ingredient name is too short (min 2 characters).'
+  if (s.length < 3) return 'Ingredient name is too short (min 3 characters).'
   if (s.length > 60) return 'Ingredient name is too long (max 60 characters).'
   if (!INGREDIENT_RE.test(s)) return 'Ingredient contains invalid characters. Only letters, digits, spaces, and basic punctuation are allowed.'
   return null
